@@ -76,6 +76,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -90,6 +91,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -104,6 +106,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -119,6 +122,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -129,9 +133,47 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="MySuper3DApp.cpp" />
+    <ClCompile Include="src\Core\Application.cpp" />
+    <ClCompile Include="src\Core\Window.cpp" />
+    <ClCompile Include="src\Core\Input.cpp" />
+    <ClCompile Include="src\Graphics\GraphicsDevice.cpp" />
+    <ClCompile Include="src\Graphics\SwapChainTarget.cpp" />
+    <ClCompile Include="src\Graphics\States.cpp" />
+    <ClCompile Include="src\Graphics\Shader.cpp" />
+    <ClCompile Include="src\Graphics\Mesh.cpp" />
+    <ClCompile Include="src\Scene\Transform.cpp" />
+    <ClCompile Include="src\Scene\Camera.cpp" />
+    <ClCompile Include="src\Scene\Scene.cpp" />
+    <ClCompile Include="src\Components\MeshRenderer.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\Core\Application.h" />
+    <ClInclude Include="src\Core\Window.h" />
+    <ClInclude Include="src\Core\Input.h" />
+    <ClInclude Include="src\Core\TimeAccumulator.h" />
+    <ClInclude Include="src\Graphics\GraphicsDevice.h" />
+    <ClInclude Include="src\Graphics\SwapChainTarget.h" />
+    <ClInclude Include="src\Graphics\ConstantBuffer.h" />
+    <ClInclude Include="src\Graphics\ConstantBuffers.h" />
+    <ClInclude Include="src\Graphics\States.h" />
+    <ClInclude Include="src\Graphics\Shader.h" />
+    <ClInclude Include="src\Graphics\Mesh.h" />
+    <ClInclude Include="src\Scene\Transform.h" />
+    <ClInclude Include="src\Scene\Camera.h" />
+    <ClInclude Include="src\Scene\Component.h" />
+    <ClInclude Include="src\Scene\RenderContext.h" />
+    <ClInclude Include="src\Scene\GameObject.h" />
+    <ClInclude Include="src\Scene\Scene.h" />
+    <ClInclude Include="src\Components\MeshRenderer.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\MyVeryFirstShader.hlsl">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="Shaders\Common.hlsli">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="Shaders\Unlit.hlsl">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>
