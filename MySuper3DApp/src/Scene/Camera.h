@@ -6,7 +6,8 @@
 class Camera
 {
 public:
-    Camera(float fovDeg, float aspect, float nearZ, float farZ);
+    static Camera Perspective(float fovDeg, float aspect, float nearZ, float farZ);
+    static Camera Orthographic(float fovDeg, float aspect, float nearZ, float farZ);
 
     void Update(float dt);
 
@@ -22,6 +23,7 @@ public:
     float lookSpeed  = 0.2f;   // градус/пиксель
 
 private:
+    Camera() = default;
     void UpdateVectors();
 
     DirectX::XMFLOAT3 position_ = { 0, 0, -3 };

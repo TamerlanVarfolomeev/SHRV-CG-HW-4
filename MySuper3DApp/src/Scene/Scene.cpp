@@ -3,7 +3,7 @@
 Scene::Scene()
 {
     // Камера по умолчанию: 45° FOV, соотношение сторон 1:1 (обновится при resize)
-    camera = std::make_unique<Camera>(45.0f, 1.0f, 0.1f, 1000.0f);
+    camera = std::make_unique<Camera>(Camera::Orthographic(5.0f, 5.0f, 0.1f, 1000.0f));
 }
 
 GameObject* Scene::CreateObject(const std::string& name)

@@ -27,6 +27,7 @@ public:
     // --- Фабричные методы для стандартных примитивов ---
     static Mesh CreateQuad(ID3D11Device* device);
     static Mesh CreateCube(ID3D11Device* device);
+    static Mesh CreateCircle(ID3D11Device* device, int vertexCount, float radius);
 
 private:
     Microsoft::WRL::ComPtr<ID3D11Buffer> vb_;

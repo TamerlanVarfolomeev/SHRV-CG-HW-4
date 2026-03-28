@@ -20,7 +20,8 @@ protected:
         auto* device = GetGfx().GetDevice();
 
         // Создаём ресурсы
-        mesh_   = std::make_unique<Mesh>(Mesh::CreateCube(device));
+        mesh_Cube   = std::make_unique<Mesh>(Mesh::CreateCube(device));
+        mesh_Circle = std::make_unique<Mesh>(Mesh::CreateCircle(device, 32, 1.0f));
         shader_ = std::make_unique<Shader>(device,
             L"./Shaders/Unlit.hlsl",
             std::vector<InputElement>{
@@ -31,10 +32,18 @@ protected:
 
         // Создаём объект на сцене
         auto* obj = GetScene().CreateObject("Cube");
-        obj->transform.position = { 0.0f, 0.0f, 2.0f };
+        obj->transform.position = { 0.0f, 0.0f, -4.0f };
 
-        auto* mr = obj->AddComponent<MeshRenderer>(device, mesh_.get(), shader_.get());
+        auto* mr = obj->AddComponent<MeshRenderer>(device, mesh_Cube.get(), shader_.get());
         mr->material.albedoColor = { 1.0f, 0.5f, 0.2f, 1.0f }; // оранжевый
+
+        // Создаём круг на сцене
+        auto* objCircle = GetScene().CreateObject("Circle");
+        objCircle->transform.position = { 0.0f, 0.0f, 2.0f };
+        
+
+        auto* mrr = objCircle->AddComponent<MeshRenderer>(device, mesh_Circle.get(), shader_.get());
+        mrr->material.albedoColor = { 1.0f, 0.5f, 0.2f, 1.0f }; // оранжевый
     }
 
     void OnUpdate(float dt) override
@@ -43,7 +52,8 @@ protected:
     }
 
 private:
-    std::unique_ptr<Mesh>   mesh_;
+    std::unique_ptr<Mesh>   mesh_Cube;
+    std::unique_ptr<Mesh>   mesh_Circle;
     std::unique_ptr<Shader> shader_;
 };
 

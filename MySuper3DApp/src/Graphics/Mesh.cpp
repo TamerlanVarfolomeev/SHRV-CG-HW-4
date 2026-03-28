@@ -53,6 +53,40 @@ Mesh Mesh::CreateQuad(ID3D11Device* device)
     return Mesh(device, verts, idx);
 }
 
+
+Mesh Mesh::CreateCircle(ID3D11Device* device, int vertexCount, float radius)
+{
+    using namespace DirectX;
+    const float PI = acos(-1.0f);
+    // Цетнральная вершина
+    std::vector<Vertex> verts = {
+        { {0.0f,  0.0f, 0.0f}, {0,0,-1}, {0,0} }
+    };
+    std::vector<uint32_t> idx;
+
+    for (int i = 0; i < vertexCount; i++)
+    {
+        float angle = 2.0f * PI * i / vertexCount;
+        float x = cos(angle) * radius;
+        float y = sin(angle) * radius;
+        verts.push_back({ {x, y, 0.0f}, {0,0,0}, {0,0} });
+    }
+
+    for (int i = 0; i < vertexCount; i++)
+    {
+        int a = i + 1;
+        int b = (i + 1) % vertexCount + 1;
+
+        idx.push_back(0);
+        idx.push_back(b);
+        idx.push_back(a);
+    }
+
+    return Mesh(device, verts, idx);
+}
+
+
+
 Mesh Mesh::CreateCube(ID3D11Device* device)
 {
     // 6 граней, по 4 вершины на каждую (уникальные нормали)

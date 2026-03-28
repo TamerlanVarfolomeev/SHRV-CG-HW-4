@@ -4,12 +4,23 @@
 
 using namespace DirectX;
 
-Camera::Camera(float fovDeg, float aspect, float nearZ, float farZ)
+Camera Camera::Perspective(float fovDeg, float aspect, float nearZ, float farZ)
 {
-    XMStoreFloat4x4(&proj_,
+    Camera cam;
+    XMStoreFloat4x4(&cam.proj_,
         XMMatrixPerspectiveFovLH(
             XMConvertToRadians(fovDeg), aspect, nearZ, farZ));
-    UpdateVectors();
+    cam.position_ = { 0,0,0 };
+    return cam;
+}
+
+Camera Camera::Orthographic(float width, float height, float nearZ, float farZ)
+{
+    Camera cam;
+    XMStoreFloat4x4(&cam.proj_,
+        XMMatrixOrthographicLH(width, height, nearZ, farZ)),
+    cam.position_ = { 0,0,0 };
+    return cam;
 }
 
 void Camera::SetAspect(float aspect)
