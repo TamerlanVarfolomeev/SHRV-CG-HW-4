@@ -10,7 +10,7 @@ Camera Camera::Perspective(float fovDeg, float aspect, float nearZ, float farZ)
     XMStoreFloat4x4(&cam.proj_,
         XMMatrixPerspectiveFovLH(
             XMConvertToRadians(fovDeg), aspect, nearZ, farZ));
-    cam.position_ = { 0,0,0 };
+    cam.position_ = { 0,0,-1 };
     return cam;
 }
 
@@ -19,7 +19,7 @@ Camera Camera::Orthographic(float width, float height, float nearZ, float farZ)
     Camera cam;
     XMStoreFloat4x4(&cam.proj_,
         XMMatrixOrthographicLH(width, height, nearZ, farZ)),
-    cam.position_ = { 0,0,0 };
+    cam.position_ = { 0,0,-10};
     return cam;
 }
 
@@ -35,27 +35,27 @@ void Camera::SetAspect(float aspect)
 void Camera::Update(float dt)
 {
     // --- Движение WASD ---
-    float speed = moveSpeed * dt;
+    //float speed = moveSpeed * dt;
 
-    if (Input::GetKey(Key::W)) { position_.x += forward_.x * speed; position_.y += forward_.y * speed; position_.z += forward_.z * speed; }
-    if (Input::GetKey(Key::S)) { position_.x -= forward_.x * speed; position_.y -= forward_.y * speed; position_.z -= forward_.z * speed; }
-    if (Input::GetKey(Key::D)) { position_.x += right_.x * speed;   position_.y += right_.y * speed;   position_.z += right_.z * speed; }
-    if (Input::GetKey(Key::A)) { position_.x -= right_.x * speed;   position_.y -= right_.y * speed;   position_.z -= right_.z * speed; }
-    if (Input::GetKey(Key::E)) position_.y += speed;
-    if (Input::GetKey(Key::Q)) position_.y -= speed;
+    //if (Input::GetKey(Key::W)) { position_.x += forward_.x * speed; position_.y += forward_.y * speed; position_.z += forward_.z * speed; }
+    //if (Input::GetKey(Key::S)) { position_.x -= forward_.x * speed; position_.y -= forward_.y * speed; position_.z -= forward_.z * speed; }
+    //if (Input::GetKey(Key::D)) { position_.x += right_.x * speed;   position_.y += right_.y * speed;   position_.z += right_.z * speed; }
+    //if (Input::GetKey(Key::A)) { position_.x -= right_.x * speed;   position_.y -= right_.y * speed;   position_.z -= right_.z * speed; }
+    //if (Input::GetKey(Key::E)) position_.y += speed;
+    //if (Input::GetKey(Key::Q)) position_.y -= speed;
 
-    // --- Вращение мышью (зажатая ПКМ) ---
-    if (Input::GetKey(Key::MouseRight))
-    {
-        auto delta = Input::GetMouseDelta();
-        if (delta.x != 0 || delta.y != 0)
-        {
-            yaw_   += delta.x * lookSpeed;
-            pitch_ += delta.y * lookSpeed;
-            pitch_  = std::clamp(pitch_, -89.0f, 89.0f);
-            UpdateVectors();
-        }
-    }
+    //// --- Вращение мышью (зажатая ПКМ) ---
+    //if (Input::GetKey(Key::MouseRight))
+    //{
+    //    auto delta = Input::GetMouseDelta();
+    //    if (delta.x != 0 || delta.y != 0)
+    //    {
+    //        yaw_   += delta.x * lookSpeed;
+    //        pitch_ += delta.y * lookSpeed;
+    //        pitch_  = std::clamp(pitch_, -89.0f, 89.0f);
+    //        UpdateVectors();
+    //    }
+    //}
 }
 
 XMMATRIX Camera::GetView() const

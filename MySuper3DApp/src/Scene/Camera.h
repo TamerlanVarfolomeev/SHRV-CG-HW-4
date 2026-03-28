@@ -25,12 +25,20 @@ public:
 private:
     Camera() = default;
     void UpdateVectors();
+    void RebuildProj(float aspect);
 
     DirectX::XMFLOAT3 position_ = { 0, 0, -3 };
-    float yaw_   = 0.0f;   // горизонтальный поворот, градусы
-    float pitch_ = 0.0f;   // вертикальный поворот, градусы
+    float yaw_   = 0.0f;
+    float pitch_ = 0.0f;
 
     DirectX::XMFLOAT4X4 proj_ = {};
+
+    // Параметры проекции — нужны для пересчёта при resize
+    bool  isOrtho_  = false;
+    float fov_      = 45.0f;  // для перспективы: FOV в градусах
+    float orthoW_   = 5.0f;   // для ортографии: ширина мира
+    float nearZ_    = 0.1f;
+    float farZ_     = 1000.0f;
 
     // Кэшированные векторы направления
     DirectX::XMFLOAT3 forward_ = { 0,0,1 };

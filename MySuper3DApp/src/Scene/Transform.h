@@ -21,5 +21,5 @@ private:
     mutable bool                 dirty_       = true;
 
     // Отслеживаем предыдущие значения для определения dirty
-    mutable DirectX::XMFLOAT3 cachedPos_ = {}, cachedRot_ = {}, cachedScale_ = { 1,1,1 };
+    mutable DirectX::XMFLOAT3 cachedPos_ = {}, cachedRot_ = {}, cachedScale_ = {};
 };

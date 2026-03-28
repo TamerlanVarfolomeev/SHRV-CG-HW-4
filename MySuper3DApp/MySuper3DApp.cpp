@@ -2,6 +2,8 @@
 #include "src/Graphics/Mesh.h"
 #include "src/Graphics/Shader.h"
 #include "src/Components/MeshRenderer.h"
+#include "src/Components/PlayerController.h"
+#include "src/Components/FoodManager.h"
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -30,20 +32,17 @@ protected:
                 { "TEXCOORD", DXGI_FORMAT_R32G32_FLOAT    },
             });
 
-        // Создаём объект на сцене
-        auto* obj = GetScene().CreateObject("Cube");
-        obj->transform.position = { 0.0f, 0.0f, -4.0f };
-
-        auto* mr = obj->AddComponent<MeshRenderer>(device, mesh_Cube.get(), shader_.get());
-        mr->material.albedoColor = { 1.0f, 0.5f, 0.2f, 1.0f }; // оранжевый
-
         // Создаём круг на сцене
         auto* objCircle = GetScene().CreateObject("Circle");
-        objCircle->transform.position = { 0.0f, 0.0f, 2.0f };
         
+        auto* cirlceMeshRender = objCircle->AddComponent<MeshRenderer>(device, mesh_Circle.get(), shader_.get());
+        cirlceMeshRender->material.albedoColor = { 1.0f, 0.5f, 0.2f, 1.0f }; // оранжевый
+        objCircle->transform.scale = { 0.1f, 0.1f, 0.1f };
 
-        auto* mrr = objCircle->AddComponent<MeshRenderer>(device, mesh_Circle.get(), shader_.get());
-        mrr->material.albedoColor = { 1.0f, 0.5f, 0.2f, 1.0f }; // оранжевый
+        auto* PC = objCircle->AddComponent<PlayerController>();
+
+        auto* foodManager = GetScene().CreateObject("FoodManager");
+        auto* foodComp = foodManager->AddComponent<FoodManager>(&GetScene(), device, shader_.get(), objCircle);
     }
 
     void OnUpdate(float dt) override
