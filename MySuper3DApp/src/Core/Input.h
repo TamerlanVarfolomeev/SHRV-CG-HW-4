@@ -76,8 +76,13 @@ public:
     // Вызывается из WndProc при движении мыши
     static void SetMouseDelta(int dx, int dy);
 
+    // Колёсико мыши: положительное = вперёд, отрицательное = назад
+    static float GetScrollDelta();
+    static void  SetScrollDelta(float delta);
+
 private:
-    static std::unordered_set<int> curr_;   // текущее состояние
-    static std::unordered_set<int> prev_;   // состояние прошлого кадра
+    static std::unordered_set<int> curr_;
+    static std::unordered_set<int> prev_;
     static DirectX::XMFLOAT2 mouseDelta_;
+    static float scrollDelta_;
 };

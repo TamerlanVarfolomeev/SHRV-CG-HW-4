@@ -85,7 +85,48 @@ Mesh Mesh::CreateCircle(ID3D11Device* device, int vertexCount, float radius)
     return Mesh(device, verts, idx);
 }
 
+Mesh Mesh::CreateSphere(ID3D11Device* device, int stacks, int sectors)
+{
+    const float PI = acosf(-1.0f);
+    std::vector<Vertex> verts;
+    std::vector<uint32_t> idx;
 
+    for (int i = 0; i <= stacks; i++)
+    {
+        float phi = PI * (-0.5f + static_cast<float>(i) / stacks);
+        float y   = sinf(phi);
+        float r   = cosf(phi);
+
+        for (int j = 0; j <= sectors; j++)
+        {
+            float theta = 2.0f * PI * static_cast<float>(j) / sectors;
+            float x = r * cosf(theta);
+            float z = r * sinf(theta);
+
+            Vertex v;
+            v.position = { x, y, z };
+            v.normal   = { x, y, z };
+            v.uv       = { static_cast<float>(j) / sectors,
+                           1.0f - static_cast<float>(i) / stacks };
+            verts.push_back(v);
+        }
+    }
+
+    for (int i = 0; i < stacks; i++)
+    {
+        for (int j = 0; j < sectors; j++)
+        {
+            uint32_t a = i * (sectors + 1) + j;
+            uint32_t b = a + sectors + 1;
+
+            // CW winding (D3D11 CULL_BACK)
+            idx.push_back(a);     idx.push_back(a + 1); idx.push_back(b);
+            idx.push_back(a + 1); idx.push_back(b + 1); idx.push_back(b);
+        }
+    }
+
+    return Mesh(device, verts, idx);
+}
 
 Mesh Mesh::CreateCube(ID3D11Device* device)
 {

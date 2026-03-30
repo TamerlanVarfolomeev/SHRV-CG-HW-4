@@ -133,8 +133,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="MySuper3DApp.cpp" />
-    <ClCompile Include="src\Components\FoodManager.cpp" />
-    <ClCompile Include="src\Components\PlayerController.cpp" />
+    <ClCompile Include="src\Components\OrbitComponent.cpp" />
     <ClCompile Include="src\Core\Application.cpp" />
     <ClCompile Include="src\Core\Window.cpp" />
     <ClCompile Include="src\Core\Input.cpp" />
@@ -149,8 +148,7 @@
     <ClCompile Include="src\Components\MeshRenderer.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Components\FoodManager.h" />
-    <ClInclude Include="src\Components\PlayerController.h" />
+    <ClInclude Include="src\Components\OrbitComponent.h" />
     <ClInclude Include="src\Core\Application.h" />
     <ClInclude Include="src\Core\Window.h" />
     <ClInclude Include="src\Core\Input.h" />

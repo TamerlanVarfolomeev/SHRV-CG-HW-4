@@ -1,47 +1,52 @@
 #pragma once
 #include <DirectXMath.h>
 
-// Camera — отдельная сущность, не компонент.
-// Поддерживает fly-cam: WASD + зажатая ПКМ для вращения мышью.
+enum class CameraMode { FPS, Orbital };
+
 class Camera
 {
 public:
-    static Camera Perspective(float fovDeg, float aspect, float nearZ, float farZ);
-    static Camera Orthographic(float fovDeg, float aspect, float nearZ, float farZ);
+    static Camera Create(float fovDeg, float aspect, float nearZ, float farZ);
 
     void Update(float dt);
-
-    // Матрицы для шейдера
-    DirectX::XMMATRIX GetView()     const;
-    DirectX::XMMATRIX GetProj()     const { return XMLoadFloat4x4(&proj_); }
-    DirectX::XMFLOAT3 GetPosition() const { return position_; }
-
     void SetAspect(float aspect);
 
-    // Параметры управления
-    float moveSpeed  = 3.0f;   // м/с
-    float lookSpeed  = 0.2f;   // градус/пиксель
+    DirectX::XMMATRIX GetView()     const;
+    DirectX::XMMATRIX GetProj()     const { return DirectX::XMLoadFloat4x4(&proj_); }
+    DirectX::XMFLOAT3 GetPosition() const { return position_; }
+
+    float moveSpeed = 8.0f;
+    float lookSpeed = 0.2f;
 
 private:
     Camera() = default;
-    void UpdateVectors();
-    void RebuildProj(float aspect);
 
-    DirectX::XMFLOAT3 position_ = { 0, 0, -3 };
-    float yaw_   = 0.0f;
-    float pitch_ = 0.0f;
+    void RebuildProj();
+    void UpdateFPS(float dt);
+    void UpdateOrbital(float dt);
+    void RebuildFPSVectors();
 
+    // Projection
+    float fov_    = 75.0f;
+    float aspect_ = 1.0f;
+    float nearZ_  = 0.1f;
+    float farZ_   = 2000.0f;
     DirectX::XMFLOAT4X4 proj_ = {};
 
-    // Параметры проекции — нужны для пересчёта при resize
-    bool  isOrtho_  = false;
-    float fov_      = 45.0f;  // для перспективы: FOV в градусах
-    float orthoW_   = 5.0f;   // для ортографии: ширина мира
-    float nearZ_    = 0.1f;
-    float farZ_     = 1000.0f;
+    CameraMode mode_ = CameraMode::Orbital;
 
-    // Кэшированные векторы направления
-    DirectX::XMFLOAT3 forward_ = { 0,0,1 };
-    DirectX::XMFLOAT3 right_   = { 1,0,0 };
+    // Computed each frame — used by GetView / GetPosition
+    DirectX::XMFLOAT3 position_ = {};
+    DirectX::XMFLOAT3 forward_  = { 0, 0, 1 };
 
+    // FPS state
+    DirectX::XMFLOAT3 fpsPos_    = { 0, 8, -50 };
+    float              fpsYaw_   = 0.0f;
+    float              fpsPitch_ = 0.0f;
+    DirectX::XMFLOAT3 fpsRight_ = { 1, 0, 0 };
+
+    // Orbital state
+    float orbitYaw_      = 0.0f;
+    float orbitPitch_    = 25.0f;
+    float orbitDistance_ = 55.0f;
 };

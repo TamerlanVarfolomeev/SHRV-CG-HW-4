@@ -97,6 +97,13 @@ LRESULT CALLBACK Window::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
     case WM_MBUTTONDOWN: Input::SetKeyDown(VK_MBUTTON);  return 0;
     case WM_MBUTTONUP:   Input::SetKeyUp(VK_MBUTTON);    return 0;
 
+    case WM_MOUSEWHEEL:
+    {
+        short delta = GET_WHEEL_DELTA_WPARAM(wp);
+        Input::SetScrollDelta(static_cast<float>(delta) / WHEEL_DELTA);
+        return 0;
+    }
+
     case WM_MOUSEMOVE:
     {
         static POINT lastPos = { -1, -1 };

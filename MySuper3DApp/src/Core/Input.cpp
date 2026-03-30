@@ -4,6 +4,7 @@
 std::unordered_set<int>  Input::curr_;
 std::unordered_set<int>  Input::prev_;
 DirectX::XMFLOAT2        Input::mouseDelta_ = { 0, 0 };
+float                    Input::scrollDelta_ = 0.0f;
 
 bool Input::GetKey(Key key)
 {
@@ -29,9 +30,13 @@ DirectX::XMFLOAT2 Input::GetMouseDelta()
 
 void Input::NewFrame()
 {
-    prev_       = curr_;       // запоминаем что было
-    mouseDelta_ = { 0, 0 };   // дельта сбрасывается каждый кадр
+    prev_        = curr_;
+    mouseDelta_  = { 0, 0 };
+    scrollDelta_ = 0.0f;
 }
+
+float Input::GetScrollDelta() { return scrollDelta_; }
+void  Input::SetScrollDelta(float delta) { scrollDelta_ += delta; }
 
 void Input::SetKeyDown(int vkCode)
 {

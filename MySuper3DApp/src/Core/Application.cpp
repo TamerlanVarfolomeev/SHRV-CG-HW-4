@@ -11,6 +11,7 @@ Application::Application(int width, int height, const std::wstring& title)
     swapChain_ = std::make_unique<SwapChainTarget>(*gfx_, window_->GetHWND(), width, height);
     states_    = std::make_unique<States>(gfx_->GetDevice());
     scene_     = std::make_unique<Scene>();
+    scene_->camera->SetAspect(static_cast<float>(width) / static_cast<float>(height));
 
     cbFrame_  = ConstantBuffer<CBPerFrame>(gfx_->GetDevice());
     cbCamera_ = ConstantBuffer<CBPerCamera>(gfx_->GetDevice());

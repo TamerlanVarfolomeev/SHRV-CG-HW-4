@@ -28,6 +28,7 @@ public:
     static Mesh CreateQuad(ID3D11Device* device);
     static Mesh CreateCube(ID3D11Device* device);
     static Mesh CreateCircle(ID3D11Device* device, int vertexCount, float radius);
+    static Mesh CreateSphere(ID3D11Device* device, int stacks = 16, int sectors = 32);
 
 private:
     Microsoft::WRL::ComPtr<ID3D11Buffer> vb_;
