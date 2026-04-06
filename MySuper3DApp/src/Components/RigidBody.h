@@ -22,6 +22,10 @@ public:
     // Для коллайдеров — гарантируют, что тело создано перед добавлением шейпов
     rp3d::RigidBody* GetBody();
 
+    // Выключает/включает участие в симуляции.
+    // При выключении тело помечается неактивным и перестаёт обновлять Transform.
+    void SetSimulated(bool simulate);
+
     float mass           = 1.0f;
     float linearDamping  = 0.05f;
     float angularDamping = 0.05f;
@@ -31,7 +35,8 @@ private:
 
     rp3d::PhysicsWorld*  world_;
     rp3d::PhysicsCommon* common_;
-    rp3d::RigidBody*     body_    = nullptr;
+    rp3d::RigidBody*     body_      = nullptr;
     PhysicsBodyType      type_;
-    bool                 created_ = false;
+    bool                 created_   = false;
+    bool                 simulated_ = true;
 };

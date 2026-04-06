@@ -14,6 +14,9 @@ public:
     // Шаг симуляции — вызывается после scene.FixedUpdate()
     void Step(float fixedDt);
 
+    // Регистрирует слушателя событий коллизии (вызывать до первого Step)
+    void SetContactListener(rp3d::EventListener* listener);
+
     rp3d::PhysicsWorld*  GetWorld()  { return world_; }
     rp3d::PhysicsCommon& GetCommon() { return common_; }
 

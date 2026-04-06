@@ -18,6 +18,9 @@ public:
     // Камера следует за игроком — вызывается из Application::OnFixedUpdate
     void FollowCamera();
 
+    // Обновляет радиус при росте сферы (влияет на угловую скорость)
+    void SetRadius(float r) { radius_ = r; }
+
 private:
     float moveSpeed_      = 15.0f;
     float radius_          = 0.5f;

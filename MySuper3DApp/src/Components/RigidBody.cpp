@@ -56,8 +56,15 @@ void RigidBody::EnsureCreated()
     body_->setAngularDamping(angularDamping);
 }
 
+void RigidBody::SetSimulated(bool simulate)
+{
+    simulated_ = simulate;
+    if (body_) body_->setIsActive(simulate);
+}
+
 void RigidBody::FixedUpdate(float)
 {
+    if (!simulated_) return;
     EnsureCreated();
 
     if (type_ != PhysicsBodyType::Dynamic) return;

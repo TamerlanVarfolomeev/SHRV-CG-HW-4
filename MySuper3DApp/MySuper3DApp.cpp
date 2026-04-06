@@ -15,16 +15,89 @@
 #include <cstdlib>
 #include <cmath>
 #include <cstdint>
+#include <unordered_map>
+#include <unordered_set>
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 #pragma comment(lib, "dxguid.lib")
 
+// ---------------------------------------------------------------------------
+// Список спавнящихся объектов — добавляй новые строки сюда
+// ---------------------------------------------------------------------------
+struct SpawnDef
+{
+    const char*   objPath;         // путь к .obj файлу (относительно рабочей директории)
+    rp3d::Vector3 boxHalfExtents;  // полу-размеры box-коллайдера
+    float         mass;            // масса объекта
+    float         eatVolume;       // вклад в объём катамари при поглощении
+};
+
+static const SpawnDef SPAWNABLE[] =
+{
+    { "Assets/bazooka.obj", { 0.12f, 0.12f, 0.55f }, 2.0f, 0.04f },
+    // Добавляй сюда новые объекты:
+    // { "Assets/myobject.obj", { 0.2f, 0.2f, 0.2f }, 1.5f, 0.05f },
+};
+static const int SPAWNABLE_COUNT = (int)(sizeof(SPAWNABLE) / sizeof(SPAWNABLE[0]));
+
+// ---------------------------------------------------------------------------
+
+struct AttachedObject
+{
+    GameObject*              go;
+    DirectX::XMFLOAT4X4     localMatrix; // трансформ объекта в локальном пространстве сферы
+};
+
+// ---------------------------------------------------------------------------
+// Слушатель контактов RP3D — собирает тела, коснувшиеся игрока
+// ---------------------------------------------------------------------------
+class KatamariContactListener : public rp3d::EventListener
+{
+public:
+    rp3d::RigidBody*                     playerBody = nullptr;
+    std::vector<rp3d::RigidBody*>        pendingEats;
+    std::unordered_set<rp3d::RigidBody*> eatenBodies; // уже съеденные (не трогать повторно)
+
+    void onContact(const rp3d::CollisionCallback::CallbackData& data) override
+    {
+        for (uint32_t i = 0; i < data.getNbContactPairs(); i++)
+        {
+            auto pair = data.getContactPair(i);
+
+            // Интересуют только новые контакты
+            if (pair.getEventType() !=
+                rp3d::CollisionCallback::ContactPair::EventType::ContactStart)
+                continue;
+
+            auto* b1 = static_cast<rp3d::RigidBody*>(pair.getBody1());
+            auto* b2 = static_cast<rp3d::RigidBody*>(pair.getBody2());
+
+            rp3d::RigidBody* hit = nullptr;
+            if      (b1 == playerBody) hit = b2;
+            else if (b2 == playerBody) hit = b1;
+
+            if (!hit) continue;
+
+            // Только динамические объекты — статический террейн игнорируем
+            if (hit->getType() != rp3d::BodyType::DYNAMIC) continue;
+
+            if (!eatenBodies.count(hit))
+            {
+                eatenBodies.insert(hit);
+                pendingEats.push_back(hit);
+            }
+        }
+    }
+};
+
+// ---------------------------------------------------------------------------
+
 class MyApp : public Application
 {
 public:
-    MyApp() : Application(1280, 720, L"Bazooka Physics Demo") {}
+    MyApp() : Application(1280, 720, L"Katamari Physics") {}
 
 protected:
     void OnStart() override
@@ -40,27 +113,47 @@ protected:
                 { "TEXCOORD", DXGI_FORMAT_R32G32_FLOAT    },
             });
 
-        // --- Загружаем ассеты базуки (один раз) ---
-        bazukaSubmeshes_ = ObjLoader::Load(dev, "Assets/bazooka.obj");
+        // --- Предзагрузка всех spawnable объектов ---
+        spawnableSubmeshes_.resize(SPAWNABLE_COUNT);
+        for (int i = 0; i < SPAWNABLE_COUNT; i++)
+            spawnableSubmeshes_[i] = ObjLoader::Load(dev, SPAWNABLE[i].objPath);
 
         // --- Террейн ---
         terrainSubmeshes_ = ObjLoader::Load(dev, "Assets/terrain.obj");
         CreateTerrain(dev);
 
-        // --- Камера: орбита чуть выше сцены ---
+        // --- Игрок ---
+        CreatePlayer(dev);
+
+        // --- Регистрируем слушатель контактов ---
+        contactListener_.playerBody = playerRb_->GetBody();
+        GetPhysics().SetContactListener(&contactListener_);
+
+        // --- Камера ---
         GetScene().camera->SetOrbitDistance(20.0f);
 
         spawnTimer_ = spawnInterval_;
-
-        // --- Игрок (сфера) ---
-        CreatePlayer(dev);
     }
 
-    void OnFixedUpdate(float fixedDt) override
+    void OnFixedUpdate(float) override
     {
-        // Камера следует за игроком
+        // 1. Камера следует за игроком
         if (playerController_)
             playerController_->FollowCamera();
+
+        // 2. Обработка новых «поеданий» (накоплено во время physics_->Step)
+        for (auto* body : contactListener_.pendingEats)
+            ProcessEat(body);
+        contactListener_.pendingEats.clear();
+
+        // 3. Обновляем позиции прикреплённых объектов вместе со сферой
+        DirectX::XMMATRIX sphereRT = GetSphereRT();
+        for (auto& att : attachedObjects_)
+        {
+            DirectX::XMMATRIX worldMat =
+                DirectX::XMLoadFloat4x4(&att.localMatrix) * sphereRT;
+            att.go->transform.SetPhysicsMatrix(worldMat);
+        }
     }
 
     void OnUpdate(float dt) override
@@ -69,7 +162,7 @@ protected:
         if (spawnTimer_ <= 0.0f)
         {
             spawnTimer_ = spawnInterval_;
-            SpawnBazooka();
+            SpawnObject();
         }
     }
 
@@ -84,7 +177,6 @@ private:
         go->transform.scale    = { 1.0f, 1.0f, 1.0f };
         go->transform.rotation = { 0.0f, 0.0f, 0.0f };
 
-        // Рендер: все submesh террейна
         for (auto& sm : terrainSubmeshes_)
         {
             auto* r = go->AddComponent<MeshRenderer>(
@@ -92,13 +184,11 @@ private:
             r->material.albedoColor = sm.albedoColor;
         }
 
-        // Физика: статическое тело + MeshCollider (ConcaveMeshShape — любая геометрия)
         go->AddComponent<RigidBody>(
             GetPhysics().GetWorld(),
             &GetPhysics().GetCommon(),
             PhysicsBodyType::Static);
 
-        // Собираем все вершины и индексы из всех submesh террейна
         std::vector<DirectX::XMFLOAT3> allPositions;
         std::vector<uint32_t>          allIndices;
         uint32_t vertexOffset = 0;
@@ -106,8 +196,7 @@ private:
         for (auto& sm : terrainSubmeshes_)
         {
             allPositions.insert(allPositions.end(),
-                                sm.meshPositions.begin(),
-                                sm.meshPositions.end());
+                                sm.meshPositions.begin(), sm.meshPositions.end());
             for (uint32_t idx : sm.meshIndices)
                 allIndices.push_back(idx + vertexOffset);
             vertexOffset += static_cast<uint32_t>(sm.meshPositions.size());
@@ -122,108 +211,181 @@ private:
     // -----------------------------------------------------------------------
     void CreatePlayer(ID3D11Device* dev)
     {
-        // Глобальный указатель для PlayerController
         gApp = this;
 
         auto* go = GetScene().CreateObject("Player");
         go->transform.position = { 0.0f, 2.0f, 0.0f };
 
-        // RigidBody — динамическое тело
-        auto* rb = go->AddComponent<RigidBody>(
+        playerRb_ = go->AddComponent<RigidBody>(
             GetPhysics().GetWorld(),
             &GetPhysics().GetCommon(),
             PhysicsBodyType::Dynamic);
-        rb->mass = 10.0f;
-        rb->linearDamping = 0.5f;
-        rb->angularDamping = 0.3f;
+        playerRb_->mass           = 10.0f;
+        playerRb_->linearDamping  = 0.5f;
+        playerRb_->angularDamping = 0.3f;
 
-        // SphereCollider
-        go->AddComponent<SphereCollider>(
-            &GetPhysics().GetCommon(),
-            0.5f);
+        playerSc_ = go->AddComponent<SphereCollider>(
+            &GetPhysics().GetCommon(), baseRadius_);
 
-        // MeshRenderer — сфера с уникальными цветами на каждом треугольнике
-        playerMesh_ = std::make_unique<Mesh>(Mesh::CreateColorSphere(dev, 0.5f, 8, 16));
+        // Процедурная сфера-меш
+        playerMesh_ = std::make_unique<Mesh>(
+            Mesh::CreateColorSphere(dev, baseRadius_, 8, 16));
 
-        // Процедурная текстура: каждый квадрат = свой цвет
         const int texSize = 64;
         std::vector<uint8_t> pixels(texSize * texSize * 4);
         for (int y = 0; y < texSize; y++)
             for (int x = 0; x < texSize; x++)
             {
                 int idx = (y * texSize + x) * 4;
-                // Разноцветный паттерн: каждый блок 8x8 пикселей = свой цвет
                 int bx = x / 8, by = y / 8;
-                pixels[idx + 0] = (bx * 41 + by * 17) % 256;  // R
-                pixels[idx + 1] = (bx * 23 + by * 59) % 256;  // G
-                pixels[idx + 2] = (bx * 67 + by * 31) % 256;  // B
-                pixels[idx + 3] = 255;                          // A
+                pixels[idx + 0] = (bx * 41 + by * 17) % 256;
+                pixels[idx + 1] = (bx * 23 + by * 59) % 256;
+                pixels[idx + 2] = (bx * 67 + by * 31) % 256;
+                pixels[idx + 3] = 255;
             }
 
         playerTexture_ = std::unique_ptr<Texture>(
             Texture::CreateFromPixels(dev, texSize, texSize, pixels.data()));
 
-        auto* r = go->AddComponent<MeshRenderer>(
+        go->AddComponent<MeshRenderer>(
             dev, playerMesh_.get(), shader_.get(), playerTexture_.get());
 
-        // PlayerController — управление и камера
-        playerController_ = go->AddComponent<PlayerController>(7.0f, 0.5f);
+        playerController_ = go->AddComponent<PlayerController>(7.0f, baseRadius_);
+        playerGo_ = go;
     }
 
     // -----------------------------------------------------------------------
-    void SpawnBazooka()
+    void SpawnObject()
     {
-        if (bazukaSubmeshes_.empty()) return;
+        if (SPAWNABLE_COUNT == 0) return;
+
+        int defIdx = rand() % SPAWNABLE_COUNT;
+        auto& def  = SPAWNABLE[defIdx];
+        auto& subs = spawnableSubmeshes_[defIdx];
+        if (subs.empty()) return;
 
         ID3D11Device* dev = GetGfx().GetDevice();
 
-        // Случайная позиция в пределах пола
-        float x = ((float)(rand() % 160) - 80.0f) * 0.1f; // [-8, 8]
-        float z = ((float)(rand() % 160) - 80.0f) * 0.1f;
-        float y = 12.0f;
-
-        // Случайный начальный поворот
+        float x  = ((float)(rand() % 160) - 80.0f) * 0.1f;
+        float z  = ((float)(rand() % 160) - 80.0f) * 0.1f;
         float ry = (float)(rand() % 360);
 
-        // Создаём один GameObject с несколькими MeshRenderer-ами (по submesh)
-        // Физическое тело — одно на всю базуку
-        auto* root = GetScene().CreateObject("Bazooka");
-        root->transform.position = { x, y, z };
-        root->transform.rotation = { 0.0f, ry, 0.0f };
+        auto* go = GetScene().CreateObject("SpawnObj");
+        go->transform.position = { x, 12.0f, z };
+        go->transform.rotation = { 0.0f, ry, 0.0f };
 
-        auto* rb = root->AddComponent<RigidBody>(
+        auto* rb = go->AddComponent<RigidBody>(
             GetPhysics().GetWorld(),
             &GetPhysics().GetCommon(),
             PhysicsBodyType::Dynamic);
-        rb->mass = 2.0f;
+        rb->mass = def.mass;
 
-        // Аппроксимируем базуку коробкой (длинная тонкая форма)
-        root->AddComponent<BoxCollider>(
-            &GetPhysics().GetCommon(),
-            rp3d::Vector3(0.12f, 0.12f, 0.55f));
+        go->AddComponent<BoxCollider>(
+            &GetPhysics().GetCommon(), def.boxHalfExtents);
 
-        // Рендер: один MeshRenderer на первый submesh, остальные — отдельные объекты-дети
-        // (в движке нет иерархии, поэтому храним все submesh на одном объекте через несколько компонент)
-        // MeshRenderer не привязан к transform — он берёт transform у gameObject,
-        // поэтому несколько рендереров на одном объекте работают корректно.
-        for (auto& sm : bazukaSubmeshes_)
+        for (auto& sm : subs)
         {
-            auto* r = root->AddComponent<MeshRenderer>(
+            auto* r = go->AddComponent<MeshRenderer>(
                 dev, sm.mesh.get(), shader_.get(), sm.texture.get());
             r->material.albedoColor = sm.albedoColor;
         }
+
+        // Сохраняем связь body → GO и объём для роста катамари
+        auto* body = rb->GetBody();
+        bodyToGo_[body]     = go;
+        bodyToVolume_[body] = def.eatVolume;
     }
 
     // -----------------------------------------------------------------------
-    std::unique_ptr<Shader>      shader_;
-    std::vector<ObjSubMesh>      terrainSubmeshes_;
-    std::vector<ObjSubMesh>      bazukaSubmeshes_;
-    PlayerController*            playerController_ = nullptr;
-    std::unique_ptr<Mesh>        playerMesh_;
-    std::unique_ptr<Texture>     playerTexture_;
+    // Вызывается ПОСЛЕ physics_->Step — безопасно изменять физику
+    void ProcessEat(rp3d::RigidBody* body)
+    {
+        auto goIt = bodyToGo_.find(body);
+        if (goIt == bodyToGo_.end()) return; // неизвестное тело (террейн и т.п.)
 
+        GameObject* go = goIt->second;
+
+        // 1. Выключаем физику объекта
+        auto* rb = go->GetComponent<RigidBody>();
+        if (rb) rb->SetSimulated(false);
+
+        // 2. Вычисляем localMatrix = objectWorld * invSphereRT
+        //    Захватываем текущий мировой трансформ объекта (уже синхронизирован RigidBody::FixedUpdate)
+        DirectX::XMMATRIX sphereRT    = GetSphereRT();
+        DirectX::XMMATRIX invSphereRT = DirectX::XMMatrixInverse(nullptr, sphereRT);
+        DirectX::XMMATRIX objWorld    = go->transform.GetWorldMatrix();
+
+        AttachedObject att;
+        att.go = go;
+        DirectX::XMStoreFloat4x4(&att.localMatrix, objWorld * invSphereRT);
+        attachedObjects_.push_back(att);
+
+        // 3. Рост сферы
+        auto volIt = bodyToVolume_.find(body);
+        if (volIt != bodyToVolume_.end())
+            eatenVolume_ += volIt->second;
+
+        UpdateSphereSize();
+    }
+
+    // -----------------------------------------------------------------------
+    void UpdateSphereSize()
+    {
+        // Радиус растёт пропорционально кубическому корню от суммарного объёма
+        float newRadius = baseRadius_ * std::pow(1.0f + eatenVolume_, 1.0f / 3.0f);
+
+        // Визуальный масштаб (S * R * T в RigidBody::FixedUpdate считывает scale)
+        float s = newRadius / baseRadius_;
+        playerGo_->transform.scale = { s, s, s };
+
+        // Физический коллайдер
+        playerSc_->SetRadius(newRadius);
+
+        // Скорость в PlayerController тоже масштабируется
+        if (playerController_)
+            playerController_->SetRadius(newRadius);
+    }
+
+    // -----------------------------------------------------------------------
+    // Матрица поворота + трансляция сферы (без масштаба) из физики RP3D
+    DirectX::XMMATRIX GetSphereRT()
+    {
+        using namespace DirectX;
+        auto* body = playerRb_->GetBody();
+        const auto& t   = body->getTransform();
+        const auto& pos = t.getPosition();
+        const auto& q   = t.getOrientation();
+
+        XMVECTOR dxQ = XMVectorSet(q.x, q.y, q.z, q.w);
+        XMMATRIX R   = XMMatrixRotationQuaternion(dxQ);
+        XMMATRIX T   = XMMatrixTranslation(pos.x, pos.y, pos.z);
+        return R * T;
+    }
+
+    // -----------------------------------------------------------------------
+    std::unique_ptr<Shader>             shader_;
+    std::vector<ObjSubMesh>             terrainSubmeshes_;
+    std::vector<std::vector<ObjSubMesh>> spawnableSubmeshes_;
+
+    // Игрок
+    GameObject*       playerGo_         = nullptr;
+    RigidBody*        playerRb_         = nullptr;
+    SphereCollider*   playerSc_         = nullptr;
+    PlayerController* playerController_ = nullptr;
+    std::unique_ptr<Mesh>    playerMesh_;
+    std::unique_ptr<Texture> playerTexture_;
+
+    // Катамари-механика
+    float                   baseRadius_    = 0.5f;
+    float                   eatenVolume_   = 0.0f;
+    std::vector<AttachedObject>              attachedObjects_;
+    KatamariContactListener                  contactListener_;
+    std::unordered_map<rp3d::RigidBody*, GameObject*> bodyToGo_;
+    std::unordered_map<rp3d::RigidBody*, float>       bodyToVolume_;
+
+    // Спавн
     float spawnTimer_    = 0.0f;
-    float spawnInterval_ = 1.5f; // базука каждые 1.5 секунды
+    float spawnInterval_ = 1.5f;
 };
 
 int main()

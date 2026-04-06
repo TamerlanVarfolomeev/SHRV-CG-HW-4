@@ -13,6 +13,11 @@ PhysicsSystem::~PhysicsSystem()
     common_.destroyPhysicsWorld(world_);
 }
 
+void PhysicsSystem::SetContactListener(rp3d::EventListener* listener)
+{
+    world_->setEventListener(listener);
+}
+
 void PhysicsSystem::Step(float fixedDt)
 {
     world_->update(fixedDt);

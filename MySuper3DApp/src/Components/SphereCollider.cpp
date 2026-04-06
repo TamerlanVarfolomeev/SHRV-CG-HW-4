@@ -24,6 +24,22 @@ void SphereCollider::EnsureCreated()
     auto* rb = gameObject->GetComponent<RigidBody>();
     if (!rb) return;
 
-    shape_ = common_->createSphereShape(radius_);
-    rb->GetBody()->addCollider(shape_, rp3d::Transform::identity());
+    shape_    = common_->createSphereShape(radius_);
+    collider_ = rb->GetBody()->addCollider(shape_, rp3d::Transform::identity());
+}
+
+void SphereCollider::SetRadius(float newRadius)
+{
+    radius_ = newRadius;
+    if (!created_) return;
+
+    auto* rb = gameObject->GetComponent<RigidBody>();
+    if (!rb) return;
+    auto* body = rb->GetBody();
+
+    if (collider_) body->removeCollider(collider_);
+    if (shape_)    common_->destroySphereShape(shape_);
+
+    shape_    = common_->createSphereShape(newRadius);
+    collider_ = body->addCollider(shape_, rp3d::Transform::identity());
 }

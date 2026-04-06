@@ -12,11 +12,15 @@ public:
 
     void FixedUpdate(float dt) override;
 
+    // Пересоздаёт коллайдер с новым радиусом (для роста сферы игрока)
+    void SetRadius(float newRadius);
+
 private:
     void EnsureCreated();
 
     rp3d::PhysicsCommon* common_;
     float                radius_;
-    rp3d::SphereShape*   shape_   = nullptr;
-    bool                 created_ = false;
+    rp3d::SphereShape*   shape_    = nullptr;
+    rp3d::Collider*      collider_ = nullptr;
+    bool                 created_  = false;
 };
