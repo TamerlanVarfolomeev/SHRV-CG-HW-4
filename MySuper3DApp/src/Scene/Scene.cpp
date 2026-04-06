@@ -18,8 +18,12 @@ void Scene::Update(float dt)
 {
     camera->Update(dt);
 
-    for (auto& obj : objects_)
-        obj->Update(dt);
+    // Используем индексный цикл со снимком размера:
+    // объекты, созданные во время Update (например, спутники),
+    // не обновляются в том же кадре и не инвалидируют итераторы.
+    const size_t count = objects_.size();
+    for (size_t i = 0; i < count; ++i)
+        objects_[i]->Update(dt);
 }
 
 void Scene::FixedUpdate(float fixedDt)

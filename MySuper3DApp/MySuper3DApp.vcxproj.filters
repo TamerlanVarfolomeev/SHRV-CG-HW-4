@@ -55,6 +55,9 @@
     <ClCompile Include="src\Components\MeshRenderer.cpp">
       <Filter>Components</Filter>
     </ClCompile>
+    <ClCompile Include="src\Components\PlanetManager.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Core\Application.h">
@@ -109,6 +112,9 @@
       <Filter>Scene</Filter>
     </ClInclude>
     <ClInclude Include="src\Components\MeshRenderer.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Components\PlanetManager.h">
       <Filter>Components</Filter>
     </ClInclude>
   </ItemGroup>

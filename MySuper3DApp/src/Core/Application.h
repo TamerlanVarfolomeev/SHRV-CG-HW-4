@@ -52,4 +52,5 @@ private:
 
     TimeAccumulator timer_;
     float totalTime_ = 0.0f;
+    bool wireframe_  = false;
 };

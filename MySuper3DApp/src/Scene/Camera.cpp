@@ -34,10 +34,10 @@ void Camera::Update(float dt)
     if (Input::GetKeyDown(Key::Tab))
         mode_ = (mode_ == CameraMode::FPS) ? CameraMode::Orbital : CameraMode::FPS;
 
-    // 1/2/3 — переключение FOV
-    if (Input::GetKeyDown(Key::Num1)) { fov_ = 45.0f;  RebuildProj(); }
-    if (Input::GetKeyDown(Key::Num2)) { fov_ = 75.0f;  RebuildProj(); }
-    if (Input::GetKeyDown(Key::Num3)) { fov_ = 110.0f; RebuildProj(); }
+    // F1/F2/F3 — переключение FOV
+    if (Input::GetKeyDown(Key::F1)) { fov_ = 45.0f;  RebuildProj(); }
+    if (Input::GetKeyDown(Key::F2)) { fov_ = 75.0f;  RebuildProj(); }
+    if (Input::GetKeyDown(Key::F3)) { fov_ = 110.0f; RebuildProj(); }
 
     if (mode_ == CameraMode::FPS)
         UpdateFPS(dt);
@@ -88,13 +88,16 @@ void Camera::UpdateOrbital(float dt)
     float yawR   = XMConvertToRadians(orbitYaw_);
     float pitchR = XMConvertToRadians(orbitPitch_);
 
-    position_.x = cosf(pitchR) * sinf(yawR) * orbitDistance_;
-    position_.y = sinf(pitchR) * orbitDistance_;
-    position_.z = cosf(pitchR) * cosf(yawR) * orbitDistance_;
+    XMFLOAT3 center = orbitCenter_ ? *orbitCenter_ : XMFLOAT3{ 0, 0, 0 };
+
+    position_.x = center.x + cosf(pitchR) * sinf(yawR) * orbitDistance_;
+    position_.y = center.y + sinf(pitchR) * orbitDistance_;
+    position_.z = center.z + cosf(pitchR) * cosf(yawR) * orbitDistance_;
 
     // Направление к центру
     XMVECTOR pos = XMLoadFloat3(&position_);
-    XMVECTOR fwd = XMVector3Normalize(XMVectorNegate(pos));
+    XMVECTOR ctr = XMLoadFloat3(&center);
+    XMVECTOR fwd = XMVector3Normalize(XMVectorSubtract(ctr, pos));
     XMStoreFloat3(&forward_, fwd);
 }
 

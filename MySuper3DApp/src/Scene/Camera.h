@@ -11,6 +11,11 @@ public:
     void Update(float dt);
     void SetAspect(float aspect);
 
+    // nullptr = свободная орбита вокруг начала координат
+    void SetOrbitCenter(const DirectX::XMFLOAT3* center) { orbitCenter_ = center; }
+
+    void SetOrbitDistance(float d) { orbitDistance_ = d; }
+
     DirectX::XMMATRIX GetView()     const;
     DirectX::XMMATRIX GetProj()     const { return DirectX::XMLoadFloat4x4(&proj_); }
     DirectX::XMFLOAT3 GetPosition() const { return position_; }
@@ -49,4 +54,6 @@ private:
     float orbitYaw_      = 0.0f;
     float orbitPitch_    = 25.0f;
     float orbitDistance_ = 55.0f;
+
+    const DirectX::XMFLOAT3* orbitCenter_ = nullptr;
 };

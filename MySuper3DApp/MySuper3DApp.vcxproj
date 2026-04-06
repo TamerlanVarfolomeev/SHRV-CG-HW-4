@@ -146,6 +146,7 @@
     <ClCompile Include="src\Scene\Camera.cpp" />
     <ClCompile Include="src\Scene\Scene.cpp" />
     <ClCompile Include="src\Components\MeshRenderer.cpp" />
+    <ClCompile Include="src\Components\PlanetManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Components\OrbitComponent.h" />
@@ -167,6 +168,7 @@
     <ClInclude Include="src\Scene\GameObject.h" />
     <ClInclude Include="src\Scene\Scene.h" />
     <ClInclude Include="src\Components\MeshRenderer.h" />
+    <ClInclude Include="src\Components\PlanetManager.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\MyVeryFirstShader.hlsl">

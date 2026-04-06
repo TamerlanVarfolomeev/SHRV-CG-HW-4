@@ -36,6 +36,12 @@ enum class Key : int
     F5 = VK_F5, F6 = VK_F6, F7 = VK_F7, F8  = VK_F8,
     F9 = VK_F9, F10= VK_F10,F11= VK_F11,F12 = VK_F12,
 
+    // Нампад
+    Numpad0 = VK_NUMPAD0, Numpad1 = VK_NUMPAD1, Numpad2 = VK_NUMPAD2,
+    Numpad3 = VK_NUMPAD3, Numpad4 = VK_NUMPAD4, Numpad5 = VK_NUMPAD5,
+    Numpad6 = VK_NUMPAD6, Numpad7 = VK_NUMPAD7, Numpad8 = VK_NUMPAD8,
+    Numpad9 = VK_NUMPAD9,
+
     // Мышь (нестандартные VK, используем свободный диапазон)
     MouseLeft   = 0x01, // VK_LBUTTON
     MouseRight  = 0x02, // VK_RBUTTON

@@ -46,6 +46,9 @@ void Application::Run()
         scene_->Update(dt);
         OnUpdate(dt);
 
+        if (Input::GetKeyDown(Key::F))
+            wireframe_ = !wireframe_;
+
         // --- Рендер ---
         BeginFrame(dt, totalTime_);
 
@@ -61,7 +64,9 @@ void Application::BeginFrame(float dt, float totalTime)
 {
     auto* context = gfx_->GetContext();
 
-    context->RSSetState(states_->Rasterizer.Solid.Get());
+    context->RSSetState(wireframe_
+        ? states_->Rasterizer.Wireframe.Get()
+        : states_->Rasterizer.Solid.Get());
     context->OMSetDepthStencilState(states_->DepthStencil.Default.Get(), 0);
     float blendFactor[4] = {};
     context->OMSetBlendState(states_->Blend.Opaque.Get(), blendFactor, 0xFFFFFFFF);
