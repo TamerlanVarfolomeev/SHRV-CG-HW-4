@@ -1,6 +1,7 @@
 #include "Texture.h"
 #include <wincodec.h>
 #include <vector>
+#include <cstdint>
 #include <stdexcept>
 
 #pragma comment(lib, "WindowsCodecs.lib")
@@ -97,4 +98,39 @@ void Texture::Unbind(ID3D11DeviceContext* ctx, UINT slot) const
 {
     ID3D11ShaderResourceView* null = nullptr;
     ctx->PSSetShaderResources(slot, 1, &null);
+}
+
+Texture* Texture::CreateFromPixels(ID3D11Device* device, int width, int height, const uint8_t* pixels)
+{
+    auto* tex = new Texture();
+
+    D3D11_TEXTURE2D_DESC desc = {};
+    desc.Width            = width;
+    desc.Height           = height;
+    desc.MipLevels        = 1;
+    desc.ArraySize        = 1;
+    desc.Format           = DXGI_FORMAT_R8G8B8A8_UNORM;
+    desc.SampleDesc.Count = 1;
+    desc.Usage            = D3D11_USAGE_IMMUTABLE;
+    desc.BindFlags        = D3D11_BIND_SHADER_RESOURCE;
+
+    UINT stride = width * 4;
+    D3D11_SUBRESOURCE_DATA initData = {};
+    initData.pSysMem     = pixels;
+    initData.SysMemPitch = stride;
+
+    ComPtr<ID3D11Texture2D> tex2d;
+    if (FAILED(device->CreateTexture2D(&desc, &initData, &tex2d)))
+        throw std::runtime_error("CreateFromPixels: CreateTexture2D failed");
+
+    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.Format                    = desc.Format;
+    srvDesc.ViewDimension             = D3D11_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Texture2D.MipLevels       = 1;
+    srvDesc.Texture2D.MostDetailedMip = 0;
+
+    if (FAILED(device->CreateShaderResourceView(tex2d.Get(), &srvDesc, &tex->srv_)))
+        throw std::runtime_error("CreateFromPixels: CreateShaderResourceView failed");
+
+    return tex;
 }

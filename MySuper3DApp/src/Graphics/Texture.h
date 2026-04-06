@@ -21,6 +21,12 @@ public:
 
     bool IsValid() const { return srv_ != nullptr; }
 
+    // Создать текстуру из массиви пикселей RGBA (width × height)
+    static Texture* CreateFromPixels(ID3D11Device* device, int width, int height, const uint8_t* pixels);
+
 private:
+    // Конструктор без параметров — только для CreateFromPixels
+    Texture() = default;
+
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srv_;
 };

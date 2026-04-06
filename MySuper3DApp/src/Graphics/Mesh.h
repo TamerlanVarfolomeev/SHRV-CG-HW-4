@@ -30,6 +30,9 @@ public:
     static Mesh CreateCircle(ID3D11Device* device, int vertexCount, float radius);
     static Mesh CreateSphere(ID3D11Device* device, int stacks = 16, int sectors = 32);
 
+    // Сфера с уникальными UV для каждого треугольника (под "разноцветную" текстуру)
+    static Mesh CreateColorSphere(ID3D11Device* device, float radius, int stacks, int sectors);
+
 private:
     Microsoft::WRL::ComPtr<ID3D11Buffer> vb_;
     Microsoft::WRL::ComPtr<ID3D11Buffer> ib_;

@@ -9,10 +9,12 @@
 #include "src/Components/MeshCollider.h"
 #include "src/Components/PlayerController.h"
 #include "src/Components/SphereCollider.h"
+#include "src/Graphics/Texture.h"
 #include <vector>
 #include <memory>
 #include <cstdlib>
 #include <cmath>
+#include <cstdint>
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -140,11 +142,29 @@ private:
             &GetPhysics().GetCommon(),
             0.5f);
 
-        // MeshRenderer — сфера
-        playerMesh_ = std::make_unique<Mesh>(Mesh::CreateSphere(dev, 16, 32));
+        // MeshRenderer — сфера с уникальными цветами на каждом треугольнике
+        playerMesh_ = std::make_unique<Mesh>(Mesh::CreateColorSphere(dev, 0.5f, 8, 16));
+
+        // Процедурная текстура: каждый квадрат = свой цвет
+        const int texSize = 64;
+        std::vector<uint8_t> pixels(texSize * texSize * 4);
+        for (int y = 0; y < texSize; y++)
+            for (int x = 0; x < texSize; x++)
+            {
+                int idx = (y * texSize + x) * 4;
+                // Разноцветный паттерн: каждый блок 8x8 пикселей = свой цвет
+                int bx = x / 8, by = y / 8;
+                pixels[idx + 0] = (bx * 41 + by * 17) % 256;  // R
+                pixels[idx + 1] = (bx * 23 + by * 59) % 256;  // G
+                pixels[idx + 2] = (bx * 67 + by * 31) % 256;  // B
+                pixels[idx + 3] = 255;                          // A
+            }
+
+        playerTexture_ = std::unique_ptr<Texture>(
+            Texture::CreateFromPixels(dev, texSize, texSize, pixels.data()));
+
         auto* r = go->AddComponent<MeshRenderer>(
-            dev, playerMesh_.get(), shader_.get());
-        r->material.albedoColor = { 0.2f, 0.8f, 0.2f, 1.0f }; // зелёная сфера
+            dev, playerMesh_.get(), shader_.get(), playerTexture_.get());
 
         // PlayerController — управление и камера
         playerController_ = go->AddComponent<PlayerController>(15.0f, 0.5f);
@@ -200,6 +220,7 @@ private:
     std::vector<ObjSubMesh>      bazukaSubmeshes_;
     PlayerController*            playerController_ = nullptr;
     std::unique_ptr<Mesh>        playerMesh_;
+    std::unique_ptr<Texture>     playerTexture_;
 
     float spawnTimer_    = 0.0f;
     float spawnInterval_ = 1.5f; // базука каждые 1.5 секунды

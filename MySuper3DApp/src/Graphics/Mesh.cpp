@@ -128,6 +128,68 @@ Mesh Mesh::CreateSphere(ID3D11Device* device, int stacks, int sectors)
     return Mesh(device, verts, idx);
 }
 
+Mesh Mesh::CreateColorSphere(ID3D11Device* device, float radius, int stacks, int sectors)
+{
+    const float PI = acosf(-1.0f);
+    std::vector<Vertex> verts;
+    std::vector<uint32_t> idx;
+
+    // Генерируем вершины: каждая вершина уникальна (без дедупликации),
+    // чтобы каждый треугольник мог иметь свой уникальный UV.
+    // UV = (треугольник_x / всего_треугольников, треугольник_y)
+    int triCount = stacks * sectors * 2;
+    int triPerRow = sectors * 2;
+
+    for (int i = 0; i < stacks; i++)
+    {
+        float phi0 = PI * (-0.5f + static_cast<float>(i) / stacks);
+        float phi1 = PI * (-0.5f + static_cast<float>(i + 1) / stacks);
+
+        float y0 = sinf(phi0);
+        float y1 = sinf(phi1);
+        float r0 = cosf(phi0);
+        float r1 = cosf(phi1);
+
+        for (int j = 0; j < sectors; j++)
+        {
+            float theta0 = 2.0f * PI * static_cast<float>(j) / sectors;
+            float theta1 = 2.0f * PI * static_cast<float>(j + 1) / sectors;
+
+            // 4 вершины квада
+            float x00 = r0 * cosf(theta0), z00 = r0 * sinf(theta0);
+            float x01 = r0 * cosf(theta1), z01 = r0 * sinf(theta1);
+            float x10 = r1 * cosf(theta0), z10 = r1 * sinf(theta0);
+            float x11 = r1 * cosf(theta1), z11 = r1 * sinf(theta1);
+
+            uint32_t triIdx = i * triPerRow + j * 2;
+            float uv0x = static_cast<float>(triIdx % triPerRow) / triPerRow;
+            float uv0y = static_cast<float>(triIdx / triPerRow) / stacks;
+            float uv1x = static_cast<float>((triIdx + 1) % triPerRow) / triPerRow;
+            float uv1y = uv0y;
+
+            // Triangle 1
+            float base0 = static_cast<float>(verts.size());
+            verts.push_back({ {x00 * radius, y0 * radius, z00 * radius}, {x00, y0, z00}, {uv0x, uv0y} });
+            verts.push_back({ {x01 * radius, y0 * radius, z01 * radius}, {x01, y0, z01}, {uv1x, uv0y} });
+            verts.push_back({ {x10 * radius, y1 * radius, z10 * radius}, {x10, y1, z10}, {(uv0x + uv1x) * 0.5f, uv1y} });
+            idx.push_back((uint32_t)base0);
+            idx.push_back((uint32_t)base0 + 1);
+            idx.push_back((uint32_t)base0 + 2);
+
+            // Triangle 2
+            float base1 = static_cast<float>(verts.size());
+            verts.push_back({ {x01 * radius, y0 * radius, z01 * radius}, {x01, y0, z01}, {uv1x, uv0y} });
+            verts.push_back({ {x11 * radius, y1 * radius, z11 * radius}, {x11, y1, z11}, {uv1x, uv1y} });
+            verts.push_back({ {x10 * radius, y1 * radius, z10 * radius}, {x10, y1, z10}, {uv0x, uv1y} });
+            idx.push_back((uint32_t)base1);
+            idx.push_back((uint32_t)base1 + 1);
+            idx.push_back((uint32_t)base1 + 2);
+        }
+    }
+
+    return Mesh(device, verts, idx);
+}
+
 Mesh Mesh::CreateCube(ID3D11Device* device)
 {
     // 6 граней, по 4 вершины на каждую (уникальные нормали)
