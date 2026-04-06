@@ -7,6 +7,8 @@
 #include "src/Components/RigidBody.h"
 #include "src/Components/BoxCollider.h"
 #include "src/Components/MeshCollider.h"
+#include "src/Components/PlayerController.h"
+#include "src/Components/SphereCollider.h"
 #include <vector>
 #include <memory>
 #include <cstdlib>
@@ -47,6 +49,16 @@ protected:
         GetScene().camera->SetOrbitDistance(20.0f);
 
         spawnTimer_ = spawnInterval_;
+
+        // --- Игрок (сфера) ---
+        CreatePlayer(dev);
+    }
+
+    void OnFixedUpdate(float fixedDt) override
+    {
+        // Камера следует за игроком
+        if (playerController_)
+            playerController_->FollowCamera();
     }
 
     void OnUpdate(float dt) override
@@ -94,7 +106,6 @@ private:
             allPositions.insert(allPositions.end(),
                                 sm.meshPositions.begin(),
                                 sm.meshPositions.end());
-            // Индексы смещаем на текущее количество вершин
             for (uint32_t idx : sm.meshIndices)
                 allIndices.push_back(idx + vertexOffset);
             vertexOffset += static_cast<uint32_t>(sm.meshPositions.size());
@@ -104,6 +115,39 @@ private:
             &GetPhysics().GetCommon(),
             std::move(allPositions),
             std::move(allIndices));
+    }
+
+    // -----------------------------------------------------------------------
+    void CreatePlayer(ID3D11Device* dev)
+    {
+        // Глобальный указатель для PlayerController
+        gApp = this;
+
+        auto* go = GetScene().CreateObject("Player");
+        go->transform.position = { 0.0f, 2.0f, 0.0f };
+
+        // RigidBody — динамическое тело
+        auto* rb = go->AddComponent<RigidBody>(
+            GetPhysics().GetWorld(),
+            &GetPhysics().GetCommon(),
+            PhysicsBodyType::Dynamic);
+        rb->mass = 1.0f;
+        rb->linearDamping = 0.5f;
+        rb->angularDamping = 0.3f;
+
+        // SphereCollider
+        go->AddComponent<SphereCollider>(
+            &GetPhysics().GetCommon(),
+            0.5f);
+
+        // MeshRenderer — сфера
+        playerMesh_ = std::make_unique<Mesh>(Mesh::CreateSphere(dev, 16, 32));
+        auto* r = go->AddComponent<MeshRenderer>(
+            dev, playerMesh_.get(), shader_.get());
+        r->material.albedoColor = { 0.2f, 0.8f, 0.2f, 1.0f }; // зелёная сфера
+
+        // PlayerController — управление и камера
+        playerController_ = go->AddComponent<PlayerController>(15.0f, 0.5f);
     }
 
     // -----------------------------------------------------------------------
@@ -154,6 +198,8 @@ private:
     std::unique_ptr<Shader>      shader_;
     std::vector<ObjSubMesh>      terrainSubmeshes_;
     std::vector<ObjSubMesh>      bazukaSubmeshes_;
+    PlayerController*            playerController_ = nullptr;
+    std::unique_ptr<Mesh>        playerMesh_;
 
     float spawnTimer_    = 0.0f;
     float spawnInterval_ = 1.5f; // базука каждые 1.5 секунды

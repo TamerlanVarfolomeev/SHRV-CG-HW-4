@@ -20,6 +20,14 @@ public:
     DirectX::XMMATRIX GetProj()     const { return DirectX::XMLoadFloat4x4(&proj_); }
     DirectX::XMFLOAT3 GetPosition() const { return position_; }
 
+    // Публичные — для внешнего управления (PlayerController)
+    DirectX::XMFLOAT3 position_ = {};
+    DirectX::XMFLOAT3 forward_  = { 0, 0, 1 };
+    CameraMode mode_ = CameraMode::Orbital;
+    DirectX::XMFLOAT3 fpsPos_    = { 0, 8, -50 };
+    float              fpsYaw_   = 0.0f;
+    float              fpsPitch_ = 0.0f;
+
     float moveSpeed = 8.0f;
     float lookSpeed = 0.2f;
 
@@ -38,22 +46,11 @@ private:
     float farZ_   = 2000.0f;
     DirectX::XMFLOAT4X4 proj_ = {};
 
-    CameraMode mode_ = CameraMode::Orbital;
-
-    // Computed each frame — used by GetView / GetPosition
-    DirectX::XMFLOAT3 position_ = {};
-    DirectX::XMFLOAT3 forward_  = { 0, 0, 1 };
-
-    // FPS state
-    DirectX::XMFLOAT3 fpsPos_    = { 0, 8, -50 };
-    float              fpsYaw_   = 0.0f;
-    float              fpsPitch_ = 0.0f;
-    DirectX::XMFLOAT3 fpsRight_ = { 1, 0, 0 };
-
     // Orbital state
     float orbitYaw_      = 0.0f;
     float orbitPitch_    = 25.0f;
     float orbitDistance_ = 55.0f;
 
     const DirectX::XMFLOAT3* orbitCenter_ = nullptr;
+    DirectX::XMFLOAT3 fpsRight_ = { 1, 0, 0 };
 };

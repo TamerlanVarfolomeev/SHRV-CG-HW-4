@@ -61,6 +61,24 @@
     <ClCompile Include="src\Graphics\Texture.cpp">
       <Filter>Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="src\Components\BoxCollider.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Components\MeshCollider.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Components\PlayerController.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Components\RigidBody.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Components\SphereCollider.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Physics\PhysicsSystem.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Core\Application.h">
@@ -122,6 +140,24 @@
     </ClInclude>
     <ClInclude Include="src\Graphics\Texture.h">
       <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Components\BoxCollider.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Components\MeshCollider.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Components\PlayerController.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Components\RigidBody.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Components\SphereCollider.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Physics\PhysicsSystem.h">
+      <Filter>Core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -13,6 +13,8 @@
 
 class Application
 {
+    friend class PlayerController;
+
 public:
     Application(int width, int height, const std::wstring& title);
     virtual ~Application();
@@ -34,6 +36,9 @@ protected:
     Scene&          GetScene()   { return *scene_; }
     States&         GetStates()  { return *states_; }
     PhysicsSystem&  GetPhysics() { return *physics_; }
+    Window&         GetWindow()  { return *window_; }
+    int             GetWidth()   const { return width_; }
+    int             GetHeight()  const { return height_; }
 
     int width_  = 0;
     int height_ = 0;
