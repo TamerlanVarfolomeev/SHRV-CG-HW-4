@@ -152,7 +152,23 @@ std::vector<ObjSubMesh> ObjLoader::Load(ID3D11Device* device, const std::string&
             // Диффузная текстура
             if (!mat.diffuse_texname.empty())
             {
-                std::string texPath = baseDir + mat.diffuse_texname;
+                std::string texPath = mat.diffuse_texname;
+
+                // Если путь абсолютный — берём только имя файла и ищем в папке текстур
+                if (texPath.find(':') != std::string::npos || texPath[0] == '/' || texPath[0] == '\\')
+                {
+                    std::string fileName = fs::path(texPath).filename().string();
+                    texPath = baseDir + "textures/" + fileName;
+
+                    // Если в textures/ нет — пробуем рядом с .obj
+                    if (!fs::exists(texPath))
+                        texPath = baseDir + fileName;
+                }
+                else
+                {
+                    texPath = baseDir + texPath;
+                }
+
                 try
                 {
                     sm.texture = std::make_unique<Texture>(device, texPath);
@@ -169,10 +185,12 @@ std::vector<ObjSubMesh> ObjLoader::Load(ID3D11Device* device, const std::string&
             sm.name = "default";
         }
 
-        // Сохраняем позиции для MeshCollider
+        // Сохраняем позиции и индексы для MeshCollider (ConcaveMeshShape)
         sm.meshPositions.reserve(vertices.size());
         for (const auto& v : vertices)
             sm.meshPositions.push_back(v.position);
+
+        sm.meshIndices = indices;
 
         sm.mesh = std::make_unique<Mesh>(device, vertices, indices);
         result.push_back(std::move(sm));

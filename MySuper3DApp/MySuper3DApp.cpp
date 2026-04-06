@@ -39,8 +39,9 @@ protected:
         // --- Загружаем ассеты базуки (один раз) ---
         bazukaSubmeshes_ = ObjLoader::Load(dev, "Assets/bazooka.obj");
 
-        // --- Пол ---
-        CreateFloor(dev);
+        // --- Террейн ---
+        terrainSubmeshes_ = ObjLoader::Load(dev, "Assets/terrain.obj");
+        CreateTerrain(dev);
 
         // --- Камера: орбита чуть выше сцены ---
         GetScene().camera->SetOrbitDistance(20.0f);
@@ -60,27 +61,49 @@ protected:
 
 private:
     // -----------------------------------------------------------------------
-    void CreateFloor(ID3D11Device* dev)
+    void CreateTerrain(ID3D11Device* dev)
     {
-        floorMesh_ = std::make_unique<Mesh>(Mesh::CreateCube(dev));
+        if (terrainSubmeshes_.empty()) return;
 
-        auto* go = GetScene().CreateObject("Floor");
-        go->transform.position = { 0.0f, -0.25f, 0.0f };
-        go->transform.scale    = { 20.0f, 0.5f, 20.0f };
+        auto* go = GetScene().CreateObject("Terrain");
+        go->transform.position = { 0.0f, 0.0f, 0.0f };
+        go->transform.scale    = { 1.0f, 1.0f, 1.0f };
+        go->transform.rotation = { 0.0f, 0.0f, 0.0f };
 
-        go->AddComponent<MeshRenderer>(dev, floorMesh_.get(), shader_.get());
-        // серый пол
-        go->GetComponent<MeshRenderer>()->material.albedoColor = { 0.4f, 0.4f, 0.4f, 1.0f };
+        // Рендер: все submesh террейна
+        for (auto& sm : terrainSubmeshes_)
+        {
+            auto* r = go->AddComponent<MeshRenderer>(
+                dev, sm.mesh.get(), shader_.get(), sm.texture.get());
+            r->material.albedoColor = sm.albedoColor;
+        }
 
-        auto* rb = go->AddComponent<RigidBody>(
+        // Физика: статическое тело + MeshCollider (ConcaveMeshShape — любая геометрия)
+        go->AddComponent<RigidBody>(
             GetPhysics().GetWorld(),
             &GetPhysics().GetCommon(),
             PhysicsBodyType::Static);
 
-        // полуразмер = половина scale (т.к. куб 1x1x1 масштабируется)
-        go->AddComponent<BoxCollider>(
+        // Собираем все вершины и индексы из всех submesh террейна
+        std::vector<DirectX::XMFLOAT3> allPositions;
+        std::vector<uint32_t>          allIndices;
+        uint32_t vertexOffset = 0;
+
+        for (auto& sm : terrainSubmeshes_)
+        {
+            allPositions.insert(allPositions.end(),
+                                sm.meshPositions.begin(),
+                                sm.meshPositions.end());
+            // Индексы смещаем на текущее количество вершин
+            for (uint32_t idx : sm.meshIndices)
+                allIndices.push_back(idx + vertexOffset);
+            vertexOffset += static_cast<uint32_t>(sm.meshPositions.size());
+        }
+
+        go->AddComponent<MeshCollider>(
             &GetPhysics().GetCommon(),
-            rp3d::Vector3(10.0f, 0.25f, 10.0f));
+            std::move(allPositions),
+            std::move(allIndices));
     }
 
     // -----------------------------------------------------------------------
@@ -129,7 +152,7 @@ private:
 
     // -----------------------------------------------------------------------
     std::unique_ptr<Shader>      shader_;
-    std::unique_ptr<Mesh>        floorMesh_;
+    std::vector<ObjSubMesh>      terrainSubmeshes_;
     std::vector<ObjSubMesh>      bazukaSubmeshes_;
 
     float spawnTimer_    = 0.0f;
