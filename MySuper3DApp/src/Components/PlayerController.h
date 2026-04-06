@@ -10,7 +10,7 @@ extern Application* gApp;
 class PlayerController : public Component
 {
 public:
-    explicit PlayerController(float moveSpeed = 15.0f, float radius = 0.5f);
+    explicit PlayerController(float moveSpeed = 7.0f, float radius = 0.5f);
     ~PlayerController() = default;
 
     void Update(float dt) override;

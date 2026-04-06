@@ -133,7 +133,7 @@ private:
             GetPhysics().GetWorld(),
             &GetPhysics().GetCommon(),
             PhysicsBodyType::Dynamic);
-        rb->mass = 1.0f;
+        rb->mass = 10.0f;
         rb->linearDamping = 0.5f;
         rb->angularDamping = 0.3f;
 
@@ -167,7 +167,7 @@ private:
             dev, playerMesh_.get(), shader_.get(), playerTexture_.get());
 
         // PlayerController — управление и камера
-        playerController_ = go->AddComponent<PlayerController>(15.0f, 0.5f);
+        playerController_ = go->AddComponent<PlayerController>(7.0f, 0.5f);
     }
 
     // -----------------------------------------------------------------------

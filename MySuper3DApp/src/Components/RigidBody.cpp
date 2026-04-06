@@ -70,7 +70,9 @@ void RigidBody::FixedUpdate(float)
     auto& t = gameObject->transform;
     t.position = { pos.x, pos.y, pos.z }; // нужно для camera follow, спавна и т.п.
 
-    XMVECTOR dxQ = XMVectorSet(q.x, q.y, q.z, q.w);
+    // RP3D — правосторонняя система, DirectX — левосторонняя.
+    // Сопряжённый кватернион инвертирует направление вращения, согласуя системы.
+    XMVECTOR dxQ = XMVectorSet(-q.x, q.y, -q.z, q.w);
     XMMATRIX R   = XMMatrixRotationQuaternion(dxQ);
     XMMATRIX T   = XMMatrixTranslation(pos.x, pos.y, pos.z);
     XMMATRIX S   = XMMatrixScaling(t.scale.x, t.scale.y, t.scale.z);

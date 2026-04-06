@@ -104,15 +104,18 @@ void PlayerController::Update(float)
     dx /= dist;
     dz /= dist;
 
-    // --- Вращаем сферу ---
-    float angularSpeed = moveSpeed_ / radius_;
+    // --- Скорость пропорциональна расстоянию до курсора, ограничена максимумом ---
+    const float speedScale = 2.5f; // единиц скорости на единицу расстояния
+    float speed = dist * speedScale;
+    if (speed > moveSpeed_) speed = moveSpeed_;
+
+    // --- Вращаем сферу (катится как колесо) ---
+    float angularSpeed = speed / radius_;
     rp3d::Vector3 angularVel(dz * angularSpeed, 0.0f, -dx * angularSpeed);
     rb->GetBody()->setAngularVelocity(angularVel);
 
-    // --- Линейная скорость ---
-    rp3d::Vector3 currentVel = rb->GetBody()->getLinearVelocity();
-    rp3d::Vector3 linearVel(dx * moveSpeed_, currentVel.y, dz * moveSpeed_);
-    rb->GetBody()->setLinearVelocity(linearVel);
+    // Линейная скорость НЕ задаётся — сфера движется ТОЛЬКО за счёт вращения
+    // (трение о поверхность террейна создаёт поступательное движение)
 }
 
 void PlayerController::FollowCamera()
