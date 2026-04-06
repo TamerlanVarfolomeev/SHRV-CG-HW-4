@@ -1,11 +1,14 @@
 #include "Application.h"
 #include "Input.h"
+#include <objbase.h>
 
 using namespace DirectX;
 
 Application::Application(int width, int height, const std::wstring& title)
     : width_(width), height_(height)
 {
+    // WIC (загрузка текстур) требует инициализации COM
+    CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
     window_    = std::make_unique<Window>(width, height, title);
     gfx_       = std::make_unique<GraphicsDevice>();
     swapChain_ = std::make_unique<SwapChainTarget>(*gfx_, window_->GetHWND(), width, height);
@@ -17,6 +20,11 @@ Application::Application(int width, int height, const std::wstring& title)
     cbCamera_ = ConstantBuffer<CBPerCamera>(gfx_->GetDevice());
 
     window_->OnResize = [this](int w, int h) { OnWindowResize(w, h); };
+}
+
+Application::~Application()
+{
+    CoUninitialize();
 }
 
 void Application::Run()
@@ -84,6 +92,10 @@ void Application::BeginFrame(float dt, float totalTime)
     float clearColor[] = { 0.1f, 0.1f, 0.1f, 1.0f };
     context->ClearRenderTargetView(rtv, clearColor);
     context->ClearDepthStencilView(dsv, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+
+    // Глобальный семплер для текстурных шейдеров (s0 = LinearWrap)
+    auto* sampler = states_->Sampler.LinearWrap.Get();
+    context->PSSetSamplers(0, 1, &sampler);
 
     // CBPerFrame (b0)
     CBPerFrame frameData;

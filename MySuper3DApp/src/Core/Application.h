@@ -14,7 +14,7 @@ class Application
 {
 public:
     Application(int width, int height, const std::wstring& title);
-    virtual ~Application() = default;
+    virtual ~Application();
 
     void Run();
 

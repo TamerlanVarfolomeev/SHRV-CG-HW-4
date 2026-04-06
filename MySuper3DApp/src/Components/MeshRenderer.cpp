@@ -6,8 +6,9 @@
 
 using namespace DirectX;
 
-MeshRenderer::MeshRenderer(ID3D11Device* device, Mesh* mesh, Shader* shader)
-    : mesh_(mesh), shader_(shader),
+MeshRenderer::MeshRenderer(ID3D11Device* device, Mesh* mesh, Shader* shader,
+                           Texture* texture)
+    : mesh_(mesh), shader_(shader), texture_(texture),
       cbObject_(device), cbMaterial_(device)
 {
 }
@@ -33,7 +34,15 @@ void MeshRenderer::Render(const RenderContext& ctx)
     cbMaterial_.Update(context, material);
     cbMaterial_.Bind(context, ShaderStage::PS, 3);
 
+    // --- Текстура (слот t0, опционально) ---
+    if (texture_)
+        texture_->Bind(context, 0);
+
     // --- Шейдер и меш ---
     shader_->Bind(context);
     mesh_->Draw(context);
+
+    // Отвязываем текстуру чтобы D3D11 debug layer не ругался
+    if (texture_)
+        texture_->Unbind(context, 0);
 }
