@@ -6,6 +6,7 @@ Release/
 *.ilk
 *.pdb
 *.obj
+!MySuper3DApp/Assets/*.obj
 *.idb
 *.ipch
 *.recipe

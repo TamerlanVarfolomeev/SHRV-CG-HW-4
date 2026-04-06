@@ -36,9 +36,25 @@ struct SpawnDef
 
 static const SpawnDef SPAWNABLE[] =
 {
-    { "Assets/bazooka.obj", { 0.12f, 0.12f, 0.55f }, 2.0f, 0.04f },
+    //  objPath                                        halfExtents (x,y,z)           mass   eatVolume
+    { "Assets/bazooka.obj",                          { 0.13f, 0.22f, 0.82f },       2.0f,  0.03f },
+    { "Assets/barrel_large.obj",                     { 0.75f, 0.85f, 0.75f },       8.0f,  0.15f },
+    { "Assets/barrel_small_stack.obj",               { 0.75f, 0.72f, 0.40f },       5.0f,  0.10f },
+    { "Assets/bed_decorated.obj",                    { 1.05f, 0.68f, 1.22f },      20.0f,  0.50f },
+    { "Assets/box_large.obj",                        { 0.60f, 0.60f, 0.60f },       6.0f,  0.12f },
+    { "Assets/box_small_decorated.obj",              { 0.60f, 0.60f, 0.60f },       4.0f,  0.10f },
+    { "Assets/chest_gold_lid.obj",                   { 0.68f, 0.38f, 0.58f },       7.0f,  0.13f },
+    { "Assets/column.obj",                           { 0.28f, 0.56f, 0.28f },       4.0f,  0.05f },
+    { "Assets/keg_decorated.obj",                    { 1.40f, 0.82f, 0.80f },      15.0f,  0.35f },
+    { "Assets/pillar_decorated.obj",                 { 0.89f, 1.60f, 0.68f },      18.0f,  0.45f },
+    { "Assets/table_long_decorated_C.obj",           { 0.80f, 1.10f, 1.60f },      15.0f,  0.45f },
+    { "Assets/table_long_tablecloth_decorated_A.obj",{ 0.82f, 0.75f, 1.60f },      12.0f,  0.40f },
+    { "Assets/table_medium_tablecloth.obj",          { 0.80f, 0.40f, 0.80f },       8.0f,  0.20f },
+    { "Assets/table_small_decorated_A.obj",          { 0.42f, 0.65f, 0.49f },       5.0f,  0.12f },
+    { "Assets/table_small_decorated_B.obj",          { 0.41f, 0.87f, 0.40f },       5.0f,  0.12f },
+    { "Assets/trunk_large_B.obj",                    { 0.60f, 0.40f, 0.52f },       8.0f,  0.15f },
     // Добавляй сюда новые объекты:
-    // { "Assets/myobject.obj", { 0.2f, 0.2f, 0.2f }, 1.5f, 0.05f },
+    // { "Assets/myobject.obj",                      { 0.2f, 0.2f, 0.2f },          1.5f,  0.05f },
 };
 static const int SPAWNABLE_COUNT = (int)(sizeof(SPAWNABLE) / sizeof(SPAWNABLE[0]));
 
