@@ -169,6 +169,11 @@ std::vector<ObjSubMesh> ObjLoader::Load(ID3D11Device* device, const std::string&
             sm.name = "default";
         }
 
+        // Сохраняем позиции для MeshCollider
+        sm.meshPositions.reserve(vertices.size());
+        for (const auto& v : vertices)
+            sm.meshPositions.push_back(v.position);
+
         sm.mesh = std::make_unique<Mesh>(device, vertices, indices);
         result.push_back(std::move(sm));
     }

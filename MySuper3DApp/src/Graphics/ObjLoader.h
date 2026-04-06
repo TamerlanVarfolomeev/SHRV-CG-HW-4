@@ -13,6 +13,9 @@ struct ObjSubMesh
     std::unique_ptr<Mesh>    mesh;
     std::unique_ptr<Texture> texture;     // nullptr если текстуры нет
     DirectX::XMFLOAT4        albedoColor = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+    // Позиции вершин для MeshCollider (выпуклый корпус)
+    std::vector<DirectX::XMFLOAT3> meshPositions;
 };
 
 // Загружает .obj файл через tiny_obj_loader.

@@ -8,6 +8,7 @@
 #include "../Scene/RenderContext.h"
 #include "Window.h"
 #include "TimeAccumulator.h"
+#include "../Physics/PhysicsSystem.h"
 #include <string>
 
 class Application
@@ -29,9 +30,10 @@ protected:
     virtual void OnRender(const RenderContext& ctx) {}
 
     // Доступ к движку из наследника
-    GraphicsDevice& GetGfx()    { return *gfx_; }
-    Scene&          GetScene()  { return *scene_; }
-    States&         GetStates() { return *states_; }
+    GraphicsDevice& GetGfx()     { return *gfx_; }
+    Scene&          GetScene()   { return *scene_; }
+    States&         GetStates()  { return *states_; }
+    PhysicsSystem&  GetPhysics() { return *physics_; }
 
     int width_  = 0;
     int height_ = 0;
@@ -46,6 +48,7 @@ private:
     std::unique_ptr<SwapChainTarget> swapChain_;
     std::unique_ptr<States>          states_;
     std::unique_ptr<Scene>           scene_;
+    std::unique_ptr<PhysicsSystem>   physics_;
 
     ConstantBuffer<CBPerFrame>  cbFrame_;
     ConstantBuffer<CBPerCamera> cbCamera_;

@@ -14,6 +14,7 @@ Application::Application(int width, int height, const std::wstring& title)
     swapChain_ = std::make_unique<SwapChainTarget>(*gfx_, window_->GetHWND(), width, height);
     states_    = std::make_unique<States>(gfx_->GetDevice());
     scene_     = std::make_unique<Scene>();
+    physics_   = std::make_unique<PhysicsSystem>();
     scene_->camera->SetAspect(static_cast<float>(width) / static_cast<float>(height));
 
     cbFrame_  = ConstantBuffer<CBPerFrame>(gfx_->GetDevice());
@@ -46,7 +47,8 @@ void Application::Run()
         // --- Фиксированный шаг (физика, логика) ---
         while (timer_.ShouldStep(fixedDt))
         {
-            scene_->FixedUpdate(fixedDt);
+            scene_->FixedUpdate(fixedDt);   // компоненты создают тела + синхронизируют
+            physics_->Step(fixedDt);        // симуляция
             OnFixedUpdate(fixedDt);
         }
 

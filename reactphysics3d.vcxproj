@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <ProjectGuid>{2F3A4B5C-6D7E-8F90-A1B2-C3D4E5F60718}</ProjectGuid>
+    <RootNamespace>reactphysics3d</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Label="Shared" />
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>$(ProjectDir)reactphysics3d-0.10.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>$(ProjectDir)reactphysics3d-0.10.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>$(ProjectDir)reactphysics3d-0.10.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>$(ProjectDir)reactphysics3d-0.10.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="reactphysics3d-0.10.2\src\body\Body.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\body\RigidBody.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\collision\Collider.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\collision\CollisionCallback.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\collision\ContactManifold.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\collision\ConvexMesh.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\collision\HalfEdgeStructure.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\collision\HeightField.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\collision\OverlapCallback.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\collision\PolygonVertexArray.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\collision\RaycastInfo.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\collision\TriangleMesh.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\collision\TriangleVertexArray.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\collision\VertexArray.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\collision\broadphase\DynamicAABBTree.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\collision\narrowphase\CapsuleVsCapsuleAlgorithm.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\collision\narrowphase\CapsuleVsConvexPolyhedronAlgorithm.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\collision\narrowphase\CollisionDispatch.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\collision\narrowphase\ConvexPolyhedronVsConvexPolyhedronAlgorithm.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\collision\narrowphase\GJK\GJKAlgorithm.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\collision\narrowphase\GJK\VoronoiSimplex.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\collision\narrowphase\NarrowPhaseInfoBatch.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\collision\narrowphase\NarrowPhaseInput.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\collision\narrowphase\SAT\SATAlgorithm.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\collision\narrowphase\SphereVsCapsuleAlgorithm.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\collision\narrowphase\SphereVsConvexPolyhedronAlgorithm.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\collision\narrowphase\SphereVsSphereAlgorithm.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\collision\shapes\AABB.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\collision\shapes\BoxShape.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\collision\shapes\CapsuleShape.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\collision\shapes\CollisionShape.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\collision\shapes\ConcaveMeshShape.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\collision\shapes\ConcaveShape.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\collision\shapes\ConvexMeshShape.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\collision\shapes\ConvexPolyhedronShape.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\collision\shapes\ConvexShape.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\collision\shapes\HeightFieldShape.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\collision\shapes\SphereShape.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\collision\shapes\TriangleShape.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\components\BallAndSocketJointComponents.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\components\BodyComponents.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\components\ColliderComponents.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\components\Components.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\components\FixedJointComponents.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\components\HingeJointComponents.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\components\JointComponents.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\components\RigidBodyComponents.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\components\SliderJointComponents.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\components\TransformComponents.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\constraint\BallAndSocketJoint.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\constraint\ContactPoint.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\constraint\FixedJoint.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\constraint\HingeJoint.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\constraint\Joint.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\constraint\SliderJoint.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\engine\Entity.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\engine\EntityManager.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\engine\Island.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\engine\Material.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\engine\OverlappingPairs.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\engine\PhysicsCommon.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\engine\PhysicsWorld.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\mathematics\Matrix2x2.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\mathematics\Matrix3x3.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\mathematics\Quaternion.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\mathematics\Transform.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\mathematics\Vector2.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\mathematics\Vector3.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\memory\HeapAllocator.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\memory\MemoryAllocator.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\memory\MemoryManager.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\memory\PoolAllocator.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\memory\SingleFrameAllocator.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\systems\BroadPhaseSystem.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\systems\CollisionDetectionSystem.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\systems\ConstraintSolverSystem.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\systems\ContactSolverSystem.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\systems\DynamicsSystem.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\systems\SolveBallAndSocketJointSystem.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\systems\SolveFixedJointSystem.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\systems\SolveHingeJointSystem.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\systems\SolveSliderJointSystem.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\utils\DebugRenderer.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\utils\DefaultLogger.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\utils\Profiler.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\utils\quickhull\QHHalfEdgeStructure.cpp" />
+    <ClCompile Include="reactphysics3d-0.10.2\src\utils\quickhull\QuickHull.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets" />
+</Project>

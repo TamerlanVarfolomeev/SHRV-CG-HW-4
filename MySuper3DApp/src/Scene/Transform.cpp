@@ -7,8 +7,23 @@ static bool Float3Equal(const XMFLOAT3& a, const XMFLOAT3& b)
     return a.x == b.x && a.y == b.y && a.z == b.z;
 }
 
+void Transform::SetPhysicsMatrix(const XMMATRIX& mat)
+{
+    physicsOverride_ = true;
+    XMStoreFloat4x4(&physicsMatrix_, mat);
+}
+
+void Transform::ClearPhysicsMatrix()
+{
+    physicsOverride_ = false;
+    dirty_ = true; // пересчитаем при следующем GetWorldMatrix
+}
+
 XMMATRIX Transform::GetWorldMatrix() const
 {
+    if (physicsOverride_)
+        return XMLoadFloat4x4(&physicsMatrix_);
+
     // Пересчитываем только если что-то изменилось
     dirty_ = !Float3Equal(position, cachedPos_)  ||
              !Float3Equal(rotation, cachedRot_)  ||

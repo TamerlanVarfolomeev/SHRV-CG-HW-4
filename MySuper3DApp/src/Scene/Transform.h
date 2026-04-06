@@ -16,10 +16,19 @@ public:
     DirectX::XMFLOAT3 Right()   const;
     DirectX::XMFLOAT3 Up()      const;
 
+    // Физическое переопределение: RigidBody выставляет полную World-матрицу напрямую,
+    // обходя Euler-конвертацию (нужно для произвольного вращения твёрдых тел).
+    void SetPhysicsMatrix(const DirectX::XMMATRIX& mat);
+    void ClearPhysicsMatrix();
+
 private:
     mutable DirectX::XMFLOAT4X4 worldCache_  = {};
     mutable bool                 dirty_       = true;
 
     // Отслеживаем предыдущие значения для определения dirty
     mutable DirectX::XMFLOAT3 cachedPos_ = {}, cachedRot_ = {}, cachedScale_ = {};
+
+    // Physics override
+    bool                 physicsOverride_ = false;
+    DirectX::XMFLOAT4X4 physicsMatrix_   = {};
 };
