@@ -282,8 +282,8 @@ private:
 
         ID3D11Device* dev = GetGfx().GetDevice();
 
-        float x  = ((float)(rand() % 160) - 80.0f) * 0.1f;
-        float z  = ((float)(rand() % 160) - 80.0f) * 0.1f;
+        float x  = ((float)(rand() % 480) - 240.0f) * 0.1f;
+        float z  = ((float)(rand() % 480) - 240.0f) * 0.1f;
         float ry = (float)(rand() % 360);
 
         auto* go = GetScene().CreateObject("SpawnObj");
@@ -306,10 +306,14 @@ private:
             r->material.albedoColor = sm.albedoColor;
         }
 
-        // Сохраняем связь body → GO и объём для роста катамари
+        // Сохраняем связь body → GO, объём и характерный размер объекта
         auto* body = rb->GetBody();
         bodyToGo_[body]     = go;
         bodyToVolume_[body] = def.eatVolume;
+
+        // Характерный размер = наибольший из полу-экстентов коллайдера
+        float sx = def.boxHalfExtents.x, sy = def.boxHalfExtents.y, sz = def.boxHalfExtents.z;
+        bodyToSize_[body] = sx > sy ? (sx > sz ? sx : sz) : (sy > sz ? sy : sz);
     }
 
     // -----------------------------------------------------------------------
@@ -318,6 +322,16 @@ private:
     {
         auto goIt = bodyToGo_.find(body);
         if (goIt == bodyToGo_.end()) return; // неизвестное тело (террейн и т.п.)
+
+        // Объект можно съесть, только если игрок достаточно вырос.
+        // Порог: характерный размер объекта не должен превышать 1.8× текущий радиус сферы.
+        auto sizeIt = bodyToSize_.find(body);
+        if (sizeIt != bodyToSize_.end() && sizeIt->second > currentRadius_ * 1.8f)
+        {
+            // Убираем из очереди «съеденных», чтобы при следующем касании попробовать снова
+            contactListener_.eatenBodies.erase(body);
+            return;
+        }
 
         GameObject* go = goIt->second;
 
@@ -349,6 +363,7 @@ private:
     {
         // Радиус растёт пропорционально кубическому корню от суммарного объёма
         float newRadius = baseRadius_ * std::pow(1.0f + eatenVolume_, 1.0f / 3.0f);
+        currentRadius_ = newRadius;
 
         // Визуальный масштаб (S * R * T в RigidBody::FixedUpdate считывает scale)
         float s = newRadius / baseRadius_;
@@ -393,15 +408,17 @@ private:
 
     // Катамари-механика
     float                   baseRadius_    = 0.5f;
+    float                   currentRadius_ = 0.5f; // обновляется в UpdateSphereSize
     float                   eatenVolume_   = 0.0f;
     std::vector<AttachedObject>              attachedObjects_;
     KatamariContactListener                  contactListener_;
     std::unordered_map<rp3d::RigidBody*, GameObject*> bodyToGo_;
     std::unordered_map<rp3d::RigidBody*, float>       bodyToVolume_;
+    std::unordered_map<rp3d::RigidBody*, float>       bodyToSize_; // макс. half-extent объекта
 
     // Спавн
     float spawnTimer_    = 0.0f;
-    float spawnInterval_ = 1.5f;
+    float spawnInterval_ = 1.0f;
 };
 
 int main()
