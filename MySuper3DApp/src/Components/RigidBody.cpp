@@ -72,7 +72,7 @@ void RigidBody::FixedUpdate(float)
 
     // RP3D — правосторонняя система, DirectX — левосторонняя.
     // Сопряжённый кватернион инвертирует направление вращения, согласуя системы.
-    XMVECTOR dxQ = XMVectorSet(-q.x, q.y, -q.z, q.w);
+    XMVECTOR dxQ = XMVectorSet(q.x, q.y, q.z, q.w);
     XMMATRIX R   = XMMatrixRotationQuaternion(dxQ);
     XMMATRIX T   = XMMatrixTranslation(pos.x, pos.y, pos.z);
     XMMATRIX S   = XMMatrixScaling(t.scale.x, t.scale.y, t.scale.z);

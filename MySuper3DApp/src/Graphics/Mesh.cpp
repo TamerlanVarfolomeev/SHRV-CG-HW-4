@@ -173,8 +173,8 @@ Mesh Mesh::CreateColorSphere(ID3D11Device* device, float radius, int stacks, int
             verts.push_back({ {x01 * radius, y0 * radius, z01 * radius}, {x01, y0, z01}, {uv1x, uv0y} });
             verts.push_back({ {x10 * radius, y1 * radius, z10 * radius}, {x10, y1, z10}, {(uv0x + uv1x) * 0.5f, uv1y} });
             idx.push_back((uint32_t)base0);
-            idx.push_back((uint32_t)base0 + 1);
             idx.push_back((uint32_t)base0 + 2);
+            idx.push_back((uint32_t)base0 + 1);
 
             // Triangle 2
             float base1 = static_cast<float>(verts.size());
@@ -182,8 +182,8 @@ Mesh Mesh::CreateColorSphere(ID3D11Device* device, float radius, int stacks, int
             verts.push_back({ {x11 * radius, y1 * radius, z11 * radius}, {x11, y1, z11}, {uv1x, uv1y} });
             verts.push_back({ {x10 * radius, y1 * radius, z10 * radius}, {x10, y1, z10}, {uv0x, uv1y} });
             idx.push_back((uint32_t)base1);
-            idx.push_back((uint32_t)base1 + 1);
             idx.push_back((uint32_t)base1 + 2);
+            idx.push_back((uint32_t)base1 + 1);
         }
     }
 
