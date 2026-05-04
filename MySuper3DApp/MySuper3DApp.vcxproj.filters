@@ -79,6 +79,9 @@
     <ClCompile Include="src\Physics\PhysicsSystem.cpp">
       <Filter>Core</Filter>
     </ClCompile>
+    <ClCompile Include="src\Components\DirectedLight.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Core\Application.h">
@@ -158,6 +161,9 @@
     </ClInclude>
     <ClInclude Include="src\Physics\PhysicsSystem.h">
       <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Components\DirectedLight.h">
+      <Filter>Components</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

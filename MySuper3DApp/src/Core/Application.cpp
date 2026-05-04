@@ -17,8 +17,9 @@ Application::Application(int width, int height, const std::wstring& title)
     physics_   = std::make_unique<PhysicsSystem>();
     scene_->camera->SetAspect(static_cast<float>(width) / static_cast<float>(height));
 
-    cbFrame_  = ConstantBuffer<CBPerFrame>(gfx_->GetDevice());
-    cbCamera_ = ConstantBuffer<CBPerCamera>(gfx_->GetDevice());
+    cbFrame_        = ConstantBuffer<CBPerFrame>(gfx_->GetDevice());
+    cbCamera_       = ConstantBuffer<CBPerCamera>(gfx_->GetDevice());
+    cbDefaultLight_ = ConstantBuffer<CBDirectedLight>(gfx_->GetDevice());
 
     window_->OnResize = [this](int w, int h) { OnWindowResize(w, h); };
 }
@@ -117,6 +118,11 @@ void Application::BeginFrame(float dt, float totalTime)
     camData.camPos = cam->GetPosition();
     cbCamera_.Update(context, camData);
     cbCamera_.Bind(context, ShaderStage::Both, 1);
+
+    // CBDirectedLight (b4) — дефолтные значения; DirectedLight-компонент перезапишет их
+    CBDirectedLight lightData;  // заполнен дефолтами из ConstantBuffers.h
+    cbDefaultLight_.Update(context, lightData);
+    cbDefaultLight_.Bind(context, ShaderStage::PS, 4);
 }
 
 void Application::EndFrame()

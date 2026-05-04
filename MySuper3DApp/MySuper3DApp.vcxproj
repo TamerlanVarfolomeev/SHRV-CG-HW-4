@@ -157,6 +157,7 @@
     <ClCompile Include="src\Components\SphereCollider.cpp" />
     <ClCompile Include="src\Components\MeshCollider.cpp" />
     <ClCompile Include="src\Components\PlayerController.cpp" />
+    <ClCompile Include="src\Components\DirectedLight.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Core\Application.h" />
@@ -185,6 +186,7 @@
     <ClInclude Include="src\Components\SphereCollider.h" />
     <ClInclude Include="src\Components\MeshCollider.h" />
     <ClInclude Include="src\Components\PlayerController.h" />
+    <ClInclude Include="src\Components\DirectedLight.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\Common.hlsli">

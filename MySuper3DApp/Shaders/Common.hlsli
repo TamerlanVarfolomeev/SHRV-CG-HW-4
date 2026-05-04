@@ -29,14 +29,25 @@ cbuffer CBPerObject : register(b2)
     matrix g_WorldInvTranspose;
 };
 
-// b3 — материал
+// b3 — материал (Phong)
 cbuffer CBMaterial : register(b3)
 {
     float4 g_AlbedoColor;
-    float  g_Roughness;
-    float  g_Metallic;
+    float  g_Shininess;      // показатель степени зеркального блика
+    float  g_SpecularStr;    // сила зеркального отражения [0..1]
     float  g_EmissiveScale;
     float  _matPad;
+};
+
+// b4 — направленный источник света
+cbuffer CBDirectedLight : register(b4)
+{
+    float3 g_LightDir;       // направление, куда летит свет (нормализованный)
+    float  _lightPad0;
+    float3 g_LightColor;     // RGB цвет источника
+    float  g_LightIntensity;
+    float3 g_AmbientColor;   // фоновое освещение
+    float  _lightPad1;
 };
 
 // Стандартная вершина — совпадает со struct Vertex в Mesh.h

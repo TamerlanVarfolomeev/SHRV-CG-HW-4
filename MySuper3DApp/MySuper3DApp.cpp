@@ -8,6 +8,8 @@
 #include "src/Components/BoxCollider.h"
 #include "src/Components/MeshCollider.h"
 #include "src/Components/PlayerController.h"
+#include "src/Components/DirectedLight.h"
+#include "src/Core/Input.h"
 #include "src/Components/SphereCollider.h"
 #include "src/Graphics/Texture.h"
 #include <vector>
@@ -114,6 +116,9 @@ class MyApp : public Application
 {
 public:
     MyApp() : Application(1280, 720, L"Katamari Physics") {}
+    GameObject* sunGo;
+    bool sunShine = false;
+
 
 protected:
     void OnStart() override
@@ -128,6 +133,12 @@ protected:
                 { "NORMAL",   DXGI_FORMAT_R32G32B32_FLOAT },
                 { "TEXCOORD", DXGI_FORMAT_R32G32_FLOAT    },
             });
+
+        // --- Направленный свет (должен быть первым объектом в сцене) ---
+        sunGo = GetScene().CreateObject("Sun");
+        
+        sun_ = sunGo->AddComponent<DirectedLight>();
+        sun_->intensity = 1.0;
 
         // --- Предзагрузка всех spawnable объектов ---
         spawnableSubmeshes_.resize(SPAWNABLE_COUNT);
@@ -153,6 +164,19 @@ protected:
 
     void OnFixedUpdate(float) override
     {
+        auto* sunC = sunGo->GetComponent<DirectedLight>();
+        if (sunShine)
+        {
+            sunC->intensity += 0.0001;
+            if (sunC->intensity >= 1.0)
+                sunShine = false;
+        }
+        else
+        {
+            sunC->intensity -= 0.0001;
+            if (sunC->intensity <= 0.0)
+                sunShine = true;
+        }
         // 1. Камера следует за игроком
         if (playerController_)
             playerController_->FollowCamera();
@@ -174,6 +198,21 @@ protected:
 
     void OnUpdate(float dt) override
     {
+        // Накапливаем заряд пока пробел зажат
+        if (Input::GetKey(Key::Space) && lastAttachedGo_)
+            spaceChargeTime_ += dt;
+
+        // Выстрел при отпускании
+        if (Input::GetKeyUp(Key::Space) && lastAttachedGo_)
+        {
+            LaunchLastAttached(spaceChargeTime_);
+            spaceChargeTime_ = 0.0f;
+        }
+
+        // Сброс заряда если отпустили без объекта
+        if (Input::GetKeyUp(Key::Space))
+            spaceChargeTime_ = 0.0f;
+
         spawnTimer_ -= dt;
         if (spawnTimer_ <= 0.0f)
         {
@@ -350,12 +389,76 @@ private:
         DirectX::XMStoreFloat4x4(&att.localMatrix, objWorld * invSphereRT);
         attachedObjects_.push_back(att);
 
+        lastAttachedGo_ = go; // запоминаем для выстрела по пробелу
+
         // 3. Рост сферы
         auto volIt = bodyToVolume_.find(body);
         if (volIt != bodyToVolume_.end())
             eatenVolume_ += volIt->second;
 
         UpdateSphereSize();
+    }
+
+    // -----------------------------------------------------------------------
+    void LaunchLastAttached(float chargeTime)
+    {
+        if (!lastAttachedGo_) return;
+
+        // Находим запись в attachedObjects_
+        auto it = std::find_if(attachedObjects_.begin(), attachedObjects_.end(),
+            [this](const AttachedObject& a) { return a.go == lastAttachedGo_; });
+        if (it == attachedObjects_.end()) return;
+
+        using namespace DirectX;
+
+        // Текущая мировая матрица объекта (из localMatrix относительно сферы)
+        XMMATRIX sphereRT = GetSphereRT();
+        XMMATRIX worldMat = XMLoadFloat4x4(&it->localMatrix) * sphereRT;
+
+        // Мировая позиция объекта
+        XMFLOAT3 objPos;
+        XMStoreFloat3(&objPos, worldMat.r[3]);
+
+        // Позиция центра игрока
+        const rp3d::Vector3& pPos = playerRb_->GetBody()->getTransform().getPosition();
+
+        // Направление выстрела: от центра сферы к объекту
+        rp3d::Vector3 dir(
+            objPos.x - pPos.x,
+            objPos.y - pPos.y,
+            objPos.z - pPos.z
+        );
+        float len = std::sqrt(dir.x*dir.x + dir.y*dir.y + dir.z*dir.z);
+        if (len < 0.001f) dir = rp3d::Vector3(0, 1, 0);
+        else              dir = dir / len;
+
+        // Скорость зависит от времени удержания: от 5 м/с (тап) до 60 м/с (2 сек)
+        constexpr float minSpeed    =  5.0f;
+        constexpr float maxSpeed    = 60.0f;
+        constexpr float maxCharge   =  2.0f;
+        float t     = std::min(chargeTime, maxCharge) / maxCharge;
+        float speed = minSpeed + (maxSpeed - minSpeed) * t;
+
+        // Восстанавливаем физику объекта
+        auto* rb = lastAttachedGo_->GetComponent<RigidBody>();
+        if (!rb) return;
+
+        // Переносим тело в текущую визуальную позицию до активации
+        rp3d::Transform rpt;
+        rpt.setPosition(rp3d::Vector3(objPos.x, objPos.y, objPos.z));
+        rpt.setOrientation(rp3d::Quaternion::identity());
+        rb->GetBody()->setTransform(rpt);
+
+        rb->SetSimulated(true);
+
+        // Скорость полёта + случайное вращение
+        rb->GetBody()->setLinearVelocity(dir * speed);
+        float spin = static_cast<float>(rand() % 20) - 10.0f;
+        rb->GetBody()->setAngularVelocity(rp3d::Vector3(spin, spin * 0.5f, spin * 0.7f));
+
+        // Убираем из списка прикреплённых
+        attachedObjects_.erase(it);
+        lastAttachedGo_ = nullptr;
     }
 
     // -----------------------------------------------------------------------
@@ -407,14 +510,19 @@ private:
     std::unique_ptr<Texture> playerTexture_;
 
     // Катамари-механика
-    float                   baseRadius_    = 0.5f;
-    float                   currentRadius_ = 0.5f; // обновляется в UpdateSphereSize
+    float                   baseRadius_      = 0.5f;
+    float                   currentRadius_   = 0.5f;
+    GameObject*             lastAttachedGo_  = nullptr; // последний прикреплённый (выстрел по пробелу)
+    float                   spaceChargeTime_ = 0.0f;    // время удержания пробела (накапливается)
     float                   eatenVolume_   = 0.0f;
     std::vector<AttachedObject>              attachedObjects_;
     KatamariContactListener                  contactListener_;
     std::unordered_map<rp3d::RigidBody*, GameObject*> bodyToGo_;
     std::unordered_map<rp3d::RigidBody*, float>       bodyToVolume_;
     std::unordered_map<rp3d::RigidBody*, float>       bodyToSize_; // макс. half-extent объекта
+
+    // Освещение
+    DirectedLight* sun_ = nullptr;
 
     // Спавн
     float spawnTimer_    = 0.0f;

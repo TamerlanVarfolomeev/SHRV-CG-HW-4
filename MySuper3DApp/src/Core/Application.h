@@ -55,8 +55,9 @@ private:
     std::unique_ptr<Scene>           scene_;
     std::unique_ptr<PhysicsSystem>   physics_;
 
-    ConstantBuffer<CBPerFrame>  cbFrame_;
-    ConstantBuffer<CBPerCamera> cbCamera_;
+    ConstantBuffer<CBPerFrame>       cbFrame_;
+    ConstantBuffer<CBPerCamera>      cbCamera_;
+    ConstantBuffer<CBDirectedLight>  cbDefaultLight_; // привязывается в BeginFrame как fallback
 
     TimeAccumulator timer_;
     float totalTime_ = 0.0f;
