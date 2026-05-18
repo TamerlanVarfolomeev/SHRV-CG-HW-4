@@ -25,6 +25,7 @@ void BoxCollider::EnsureCreated()
     auto* rb = gameObject->GetComponent<RigidBody>();
     if (!rb) return;
 
-    shape_ = common_->createBoxShape(halfExtents_);
-    rb->GetBody()->addCollider(shape_, rp3d::Transform::identity());
+    shape_    = common_->createBoxShape(halfExtents_);
+    collider_ = rb->GetBody()->addCollider(shape_, rp3d::Transform::identity());
+    collider_->getMaterial().setFrictionCoefficient(friction);
 }

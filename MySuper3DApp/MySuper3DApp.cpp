@@ -11,7 +11,9 @@
 #include "src/Components/DirectedLight.h"
 #include "src/Core/Input.h"
 #include "src/Components/SphereCollider.h"
+#include "src/Components/Skybox.h"
 #include "src/Graphics/Texture.h"
+#include "src/Graphics/CubeTexture.h"
 #include <vector>
 #include <memory>
 #include <cstdlib>
@@ -19,6 +21,8 @@
 #include <cstdint>
 #include <unordered_map>
 #include <unordered_set>
+#include <array>
+#include <exception>
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -136,9 +140,26 @@ protected:
 
         // --- Направленный свет (должен быть первым объектом в сцене) ---
         sunGo = GetScene().CreateObject("Sun");
-        
+
         sun_ = sunGo->AddComponent<DirectedLight>();
         sun_->intensity = 1.0;
+
+        // --- Скайбокс: одна картинка-крест 4×3 в Assets/skybox/sky.png ---
+        // Раскладка:
+        //   .  +Y .  .
+        //   -X +Z +X -Z
+        //   .  -Y .  .
+        try
+        {
+            skybox_ = std::unique_ptr<CubeTexture>(
+                CubeTexture::CreateFromCross(dev, "Assets/skybox/sky.png"));
+            auto* skyGo = GetScene().CreateObject("Skybox");
+            skyGo->AddComponent<Skybox>(dev, &GetStates(), skybox_.get());
+        }
+        catch (const std::exception&)
+        {
+            // Файл скайбокса отсутствует или неправильных пропорций — пропускаем
+        }
 
         // --- Предзагрузка всех spawnable объектов ---
         spawnableSubmeshes_.resize(SPAWNABLE_COUNT);
@@ -177,11 +198,8 @@ protected:
             if (sunC->intensity <= 0.0)
                 sunShine = true;
         }
-        // 1. Камера следует за игроком
-        if (playerController_)
-            playerController_->FollowCamera();
-
-        // 2. Обработка новых «поеданий» (накоплено во время physics_->Step)
+        // 1. Обработка новых «поеданий» (накоплено во время physics_->Step)
+        //    Камера обновляется внутри PlayerController::Update (3rd-person mouse + WASD)
         for (auto* body : contactListener_.pendingEats)
             ProcessEat(body);
         contactListener_.pendingEats.clear();
@@ -198,20 +216,17 @@ protected:
 
     void OnUpdate(float dt) override
     {
-        // Накапливаем заряд пока пробел зажат
-        if (Input::GetKey(Key::Space) && lastAttachedGo_)
+        // Накапливаем заряд пока пробел зажат (только если есть что стрелять)
+        if (Input::GetKey(Key::Space) && !shootQueue_.empty())
             spaceChargeTime_ += dt;
 
-        // Выстрел при отпускании
-        if (Input::GetKeyUp(Key::Space) && lastAttachedGo_)
+        // Выстрел при отпускании — один объект за нажатие
+        if (Input::GetKeyUp(Key::Space))
         {
-            LaunchLastAttached(spaceChargeTime_);
+            if (!shootQueue_.empty())
+                LaunchFromQueue(spaceChargeTime_);
             spaceChargeTime_ = 0.0f;
         }
-
-        // Сброс заряда если отпустили без объекта
-        if (Input::GetKeyUp(Key::Space))
-            spaceChargeTime_ = 0.0f;
 
         spawnTimer_ -= dt;
         if (spawnTimer_ <= 0.0f)
@@ -257,10 +272,11 @@ private:
             vertexOffset += static_cast<uint32_t>(sm.meshPositions.size());
         }
 
-        go->AddComponent<MeshCollider>(
+        auto* terrainCol = go->AddComponent<MeshCollider>(
             &GetPhysics().GetCommon(),
             std::move(allPositions),
             std::move(allIndices));
+        terrainCol->friction = 1.0f; // максимальный грип — сфера не должна скользить
     }
 
     // -----------------------------------------------------------------------
@@ -276,11 +292,12 @@ private:
             &GetPhysics().GetCommon(),
             PhysicsBodyType::Dynamic);
         playerRb_->mass           = 10.0f;
-        playerRb_->linearDamping  = 0.5f;
-        playerRb_->angularDamping = 0.3f;
+        playerRb_->linearDamping  = 1.5f; // быстро тормозит без ввода (катамари не дрейфует)
+        playerRb_->angularDamping = 0.5f;
 
         playerSc_ = go->AddComponent<SphereCollider>(
             &GetPhysics().GetCommon(), baseRadius_);
+        playerSc_->friction = 1.0f; // максимальный грип — спин не пробуксовывает
 
         // Процедурная сфера-меш
         playerMesh_ = std::make_unique<Mesh>(
@@ -389,7 +406,7 @@ private:
         DirectX::XMStoreFloat4x4(&att.localMatrix, objWorld * invSphereRT);
         attachedObjects_.push_back(att);
 
-        lastAttachedGo_ = go; // запоминаем для выстрела по пробелу
+        shootQueue_.push_back(go); // кладём в очередь выстрела
 
         // 3. Рост сферы
         auto volIt = bodyToVolume_.find(body);
@@ -400,18 +417,23 @@ private:
     }
 
     // -----------------------------------------------------------------------
-    void LaunchLastAttached(float chargeTime)
+    // Стреляет последним объектом из очереди (LIFO: последний прикреплённый — первый вылетает)
+    void LaunchFromQueue(float chargeTime)
     {
-        if (!lastAttachedGo_) return;
+        if (shootQueue_.empty()) return;
 
-        // Находим запись в attachedObjects_
+        // Берём последний прикреплённый объект из очереди
+        GameObject* go = shootQueue_.back();
+        shootQueue_.pop_back();
+
+        // Находим его запись в attachedObjects_
         auto it = std::find_if(attachedObjects_.begin(), attachedObjects_.end(),
-            [this](const AttachedObject& a) { return a.go == lastAttachedGo_; });
+            [go](const AttachedObject& a) { return a.go == go; });
         if (it == attachedObjects_.end()) return;
 
         using namespace DirectX;
 
-        // Текущая мировая матрица объекта (из localMatrix относительно сферы)
+        // Текущая мировая матрица объекта
         XMMATRIX sphereRT = GetSphereRT();
         XMMATRIX worldMat = XMLoadFloat4x4(&it->localMatrix) * sphereRT;
 
@@ -433,17 +455,16 @@ private:
         else              dir = dir / len;
 
         // Скорость зависит от времени удержания: от 5 м/с (тап) до 60 м/с (2 сек)
-        constexpr float minSpeed    =  5.0f;
-        constexpr float maxSpeed    = 60.0f;
-        constexpr float maxCharge   =  2.0f;
+        constexpr float minSpeed  =  5.0f;
+        constexpr float maxSpeed  = 60.0f;
+        constexpr float maxCharge =  2.0f;
         float t     = std::min(chargeTime, maxCharge) / maxCharge;
         float speed = minSpeed + (maxSpeed - minSpeed) * t;
 
-        // Восстанавливаем физику объекта
-        auto* rb = lastAttachedGo_->GetComponent<RigidBody>();
+        // Восстанавливаем физику — сначала ставим тело в текущую визуальную позицию
+        auto* rb = go->GetComponent<RigidBody>();
         if (!rb) return;
 
-        // Переносим тело в текущую визуальную позицию до активации
         rp3d::Transform rpt;
         rpt.setPosition(rp3d::Vector3(objPos.x, objPos.y, objPos.z));
         rpt.setOrientation(rp3d::Quaternion::identity());
@@ -451,14 +472,13 @@ private:
 
         rb->SetSimulated(true);
 
-        // Скорость полёта + случайное вращение
+        // Скорость полёта + случайный спин
         rb->GetBody()->setLinearVelocity(dir * speed);
         float spin = static_cast<float>(rand() % 20) - 10.0f;
         rb->GetBody()->setAngularVelocity(rp3d::Vector3(spin, spin * 0.5f, spin * 0.7f));
 
         // Убираем из списка прикреплённых
         attachedObjects_.erase(it);
-        lastAttachedGo_ = nullptr;
     }
 
     // -----------------------------------------------------------------------
@@ -512,7 +532,7 @@ private:
     // Катамари-механика
     float                   baseRadius_      = 0.5f;
     float                   currentRadius_   = 0.5f;
-    GameObject*             lastAttachedGo_  = nullptr; // последний прикреплённый (выстрел по пробелу)
+    std::vector<GameObject*> shootQueue_;                // очередь выстрела (LIFO): все прикреплённые объекты
     float                   spaceChargeTime_ = 0.0f;    // время удержания пробела (накапливается)
     float                   eatenVolume_   = 0.0f;
     std::vector<AttachedObject>              attachedObjects_;
@@ -523,6 +543,9 @@ private:
 
     // Освещение
     DirectedLight* sun_ = nullptr;
+
+    // Скайбокс (опционально, требует 6 граней в Assets/skybox/)
+    std::unique_ptr<CubeTexture> skybox_;
 
     // Спавн
     float spawnTimer_    = 0.0f;

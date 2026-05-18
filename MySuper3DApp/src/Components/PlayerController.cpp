@@ -1,11 +1,11 @@
 #include "PlayerController.h"
 #include "RigidBody.h"
-#include "SphereCollider.h"
 #include "../Scene/GameObject.h"
 #include "../Core/Application.h"
-#include "../Core/Window.h"
-#include <DirectXMath.h>
+#include <algorithm>
 #include <cmath>
+
+using namespace DirectX;
 
 Application* gApp = nullptr;
 
@@ -20,131 +20,114 @@ void PlayerController::Update(float)
 
     auto& playerPos = gameObject->transform.position;
 
-    // --- Управление камерой: колёсико ---
+    // --- Мышь: дельта от центра окна + сброс курсора в центр ---
+    HWND hWnd = gApp->window_->GetHWND();
+    RECT cr;
+    GetClientRect(hWnd, &cr);
+    int centerX = (cr.right  - cr.left) / 2;
+    int centerY = (cr.bottom - cr.top)  / 2;
+
+    // Скрываем курсор при первом вызове
+    if (!cursorLocked_)
+    {
+        ShowCursor(FALSE);
+        cursorLocked_ = true;
+    }
+
+    POINT cursorClient;
+    GetCursorPos(&cursorClient);
+    ScreenToClient(hWnd, &cursorClient);
+
+    float mdx = static_cast<float>(cursorClient.x - centerX);
+    float mdy = static_cast<float>(cursorClient.y - centerY);
+
+    // Возвращаем курсор в центр окна
+    POINT screenCenter = { centerX, centerY };
+    ClientToScreen(hWnd, &screenCenter);
+    SetCursorPos(screenCenter.x, screenCenter.y);
+
+    // Игнорируем большие скачки (стартовая позиция, возврат после alt-tab)
+    if (std::fabs(mdx) < 200.0f && std::fabs(mdy) < 200.0f)
+    {
+        cameraYaw_   += mdx * mouseSensitivity_;
+        cameraPitch_ += mdy * mouseSensitivity_;
+        cameraPitch_  = std::clamp(cameraPitch_, -10.0f, 80.0f);
+    }
+
+    // --- Колёсико: дистанция камеры ---
     float scroll = Input::GetScrollDelta();
     if (scroll != 0.0f)
     {
         cameraDistance_ -= scroll * 0.5f;
-        if (cameraDistance_ < 3.0f)  cameraDistance_ = 3.0f;
-        if (cameraDistance_ > 25.0f) cameraDistance_ = 25.0f;
+        cameraDistance_  = std::clamp(cameraDistance_, 3.0f, 25.0f);
         Input::SetScrollDelta(0.0f);
     }
 
-    // --- Определяем направление к курсору мыши ---
-    POINT cursorPos;
-    if (!GetCursorPos(&cursorPos))
-        return;
+    // --- WASD: направление в плоскости XZ, повёрнутое на cameraYaw_ ---
+    const float yawR   = XMConvertToRadians(cameraYaw_);
+    const float pitchR = XMConvertToRadians(cameraPitch_);
 
-    // Преобразуем в клиентские координаты
-    if (!ScreenToClient(gApp->window_->GetHWND(), &cursorPos))
-        return;
+    XMFLOAT3 camForwardXZ = {  sinf(yawR), 0.0f,  cosf(yawR) };
+    XMFLOAT3 camRightXZ   = {  cosf(yawR), 0.0f, -sinf(yawR) };
 
-    // Нормализуем в [-1, 1]
-    int w = gApp->width_;
-    int h = gApp->height_;
-    float ndcX = (2.0f * cursorPos.x / w) - 1.0f;
-    float ndcY = 1.0f - (2.0f * cursorPos.y / h);
+    float fwdInput   = (Input::GetKey(Key::W) ? 1.0f : 0.0f) - (Input::GetKey(Key::S) ? 1.0f : 0.0f);
+    float rightInput = (Input::GetKey(Key::D) ? 1.0f : 0.0f) - (Input::GetKey(Key::A) ? 1.0f : 0.0f);
 
-    // Получаем матрицу View * Projection от камеры
+    XMFLOAT3 moveDir = {
+        fwdInput * camForwardXZ.x + rightInput * camRightXZ.x,
+        0.0f,
+        fwdInput * camForwardXZ.z + rightInput * camRightXZ.z
+    };
+
+    float moveLen = std::sqrt(moveDir.x * moveDir.x + moveDir.z * moveDir.z);
+    if (moveLen > 0.001f)
+    {
+        moveDir.x /= moveLen;
+        moveDir.z /= moveLen;
+
+        // Угловая скорость для качения сферы: ось вращения перпендикулярна направлению движения
+        float angularSpeed = moveSpeed_ / radius_;
+        rp3d::Vector3 angularVel(
+             moveDir.z * angularSpeed,
+             0.0f,
+            -moveDir.x * angularSpeed
+        );
+        rb->GetBody()->setAngularVelocity(angularVel);
+    }
+    // Если WASD не нажаты — оставляем инерцию (катамари продолжает катиться, трение остановит)
+
+    // --- Позиция камеры: орбита вокруг игрока ---
+    XMFLOAT3 camOffset = {
+        -sinf(yawR) * cosf(pitchR) * cameraDistance_,
+                       sinf(pitchR) * cameraDistance_,
+        -cosf(yawR) * cosf(pitchR) * cameraDistance_
+    };
+    XMFLOAT3 camPos = {
+        playerPos.x + camOffset.x,
+        playerPos.y + camOffset.y,
+        playerPos.z + camOffset.z
+    };
+
+    // Направление: от камеры к игроку
+    XMFLOAT3 fwd = {
+        playerPos.x - camPos.x,
+        playerPos.y - camPos.y,
+        playerPos.z - camPos.z
+    };
+    float fwdLen = std::sqrt(fwd.x * fwd.x + fwd.y * fwd.y + fwd.z * fwd.z);
+    if (fwdLen > 0.001f) { fwd.x /= fwdLen; fwd.y /= fwdLen; fwd.z /= fwdLen; }
+
+    // --- Передаём всё в камеру (это перезаписывает любые изменения Camera::Update) ---
     auto* camera = gApp->scene_->camera.get();
-    auto camView = camera->GetView();
-    auto camProj = camera->GetProj();
-    auto camVP = DirectX::XMMatrixMultiply(camView, camProj);
-    auto invVP = DirectX::XMMatrixInverse(nullptr, camVP);
-
-    // Unproject: точка на near и far плоскостях
-    DirectX::XMFLOAT4 nearPt(ndcX, ndcY, 0.0f, 1.0f);
-    DirectX::XMFLOAT4 farPt(ndcX, ndcY, 1.0f, 1.0f);
-
-    DirectX::XMVECTOR nearV = DirectX::XMLoadFloat4(&nearPt);
-    DirectX::XMVECTOR farV  = DirectX::XMLoadFloat4(&farPt);
-
-    nearV = DirectX::XMVector4Transform(nearV, invVP);
-    farV  = DirectX::XMVector4Transform(farV, invVP);
-
-    // Делим на W (XMVECTOR не поддерживает /=)
-    float nearW = DirectX::XMVectorGetW(nearV);
-    float farW  = DirectX::XMVectorGetW(farV);
-    DirectX::XMVECTOR nearWVec = DirectX::XMVectorReplicate(nearW);
-    DirectX::XMVECTOR farWVec  = DirectX::XMVectorReplicate(farW);
-    DirectX::XMVECTOR nearWRecip = DirectX::XMVectorReciprocal(nearWVec);
-    DirectX::XMVECTOR farWRecip  = DirectX::XMVectorReciprocal(farWVec);
-    nearV = DirectX::XMVectorMultiply(nearV, nearWRecip);
-    farV  = DirectX::XMVectorMultiply(farV, farWRecip);
-
-    DirectX::XMFLOAT3 nearWorld, farWorld;
-    DirectX::XMStoreFloat3(&nearWorld, nearV);
-    DirectX::XMStoreFloat3(&farWorld, farV);
-
-    // Направление луча
-    DirectX::XMFLOAT3 rayDir;
-    rayDir.x = farWorld.x - nearWorld.x;
-    rayDir.y = farWorld.y - nearWorld.y;
-    rayDir.z = farWorld.z - nearWorld.z;
-
-    // Пересекаем луч с плоскостью Y = 0 (земля)
-    if (std::abs(rayDir.y) < 1e-5f)
-        return; // луч параллелен земле
-
-    float t = (0.0f - nearWorld.y) / rayDir.y;
-    if (t < 0.0f)
-        return; // точка за камерой
-
-    float hitX = nearWorld.x + rayDir.x * t;
-    float hitZ = nearWorld.z + rayDir.z * t;
-
-    // Направление от игрока к точке курсора
-    float dx = hitX - playerPos.x;
-    float dz = hitZ - playerPos.z;
-    float dist = std::sqrt(dx * dx + dz * dz);
-
-    if (dist < 0.1f)
-        return; // уже на месте
-
-    dx /= dist;
-    dz /= dist;
-
-    // --- Скорость пропорциональна расстоянию до курсора, ограничена максимумом ---
-    const float speedScale = 2.5f; // единиц скорости на единицу расстояния
-    float speed = dist * speedScale;
-    if (speed > moveSpeed_) speed = moveSpeed_;
-
-    // --- Вращаем сферу (катится как колесо) ---
-    float angularSpeed = speed / radius_;
-    rp3d::Vector3 angularVel(dz * angularSpeed, 0.0f, -dx * angularSpeed);
-    rb->GetBody()->setAngularVelocity(angularVel);
-
-    // Линейная скорость НЕ задаётся — сфера движется ТОЛЬКО за счёт вращения
-    // (трение о поверхность террейна создаёт поступательное движение)
-}
-
-void PlayerController::FollowCamera()
-{
-    auto* camera = gApp->scene_->camera.get();
-    if (!camera) return;
-
-    auto& pos = gameObject->transform.position;
-
-    // Позиция камеры: сзади-сверху от игрока
-    float pitchRad = DirectX::XMConvertToRadians(cameraPitch_);
-    float offsetY  = cameraDistance_ * std::sin(pitchRad);
-    float offsetH  = cameraDistance_ * std::cos(pitchRad);
-
-    DirectX::XMFLOAT3 camPos;
-    camPos.x = pos.x;
-    camPos.y = pos.y + offsetY;
-    camPos.z = pos.z - offsetH/4;
-
-    DirectX::XMFLOAT3 fwd;
-    fwd.x = 0.0f;
-    fwd.y = -std::sin(pitchRad);
-    fwd.z = std::cos(pitchRad);
-
-    camera->mode_ = CameraMode::FPS;
-    camera->fpsPos_   = camPos;
-    camera->fpsYaw_   = 0.0f;
-    camera->fpsPitch_ = 70;
-
-    camera->position_ = camPos;
-    camera->forward_   = fwd;
+    if (camera)
+    {
+        camera->mode_     = CameraMode::FPS;
+        camera->position_ = camPos;
+        camera->forward_  = fwd;
+        // Синхронизируем внутреннее состояние Camera, чтобы её Update следующего кадра
+        // не сместил позицию (Camera::UpdateFPS читает WASD и двигает fpsPos_)
+        camera->fpsPos_   = camPos;
+        camera->fpsYaw_   = cameraYaw_;
+        camera->fpsPitch_ = cameraPitch_;
+    }
 }

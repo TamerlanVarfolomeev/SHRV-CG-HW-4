@@ -79,6 +79,7 @@ void MeshCollider::EnsureCreated()
         return;
     }
 
-    shape_ = common_->createConcaveMeshShape(triangleMesh_);
-    rb->GetBody()->addCollider(shape_, rp3d::Transform::identity());
+    shape_    = common_->createConcaveMeshShape(triangleMesh_);
+    collider_ = rb->GetBody()->addCollider(shape_, rp3d::Transform::identity());
+    collider_->getMaterial().setFrictionCoefficient(friction);
 }

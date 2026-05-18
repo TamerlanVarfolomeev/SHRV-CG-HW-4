@@ -146,6 +146,7 @@
     <ClCompile Include="src\Graphics\Shader.cpp" />
     <ClCompile Include="src\Graphics\Mesh.cpp" />
     <ClCompile Include="src\Graphics\Texture.cpp" />
+    <ClCompile Include="src\Graphics\CubeTexture.cpp" />
     <ClCompile Include="src\Graphics\ObjLoader.cpp" />
     <ClCompile Include="src\Scene\Transform.cpp" />
     <ClCompile Include="src\Scene\Camera.cpp" />
@@ -158,6 +159,7 @@
     <ClCompile Include="src\Components\MeshCollider.cpp" />
     <ClCompile Include="src\Components\PlayerController.cpp" />
     <ClCompile Include="src\Components\DirectedLight.cpp" />
+    <ClCompile Include="src\Components\Skybox.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Core\Application.h" />
@@ -172,6 +174,7 @@
     <ClInclude Include="src\Graphics\Shader.h" />
     <ClInclude Include="src\Graphics\Mesh.h" />
     <ClInclude Include="src\Graphics\Texture.h" />
+    <ClInclude Include="src\Graphics\CubeTexture.h" />
     <ClInclude Include="src\Graphics\ObjLoader.h" />
     <ClInclude Include="src\Scene\Transform.h" />
     <ClInclude Include="src\Scene\Camera.h" />
@@ -187,12 +190,19 @@
     <ClInclude Include="src\Components\MeshCollider.h" />
     <ClInclude Include="src\Components\PlayerController.h" />
     <ClInclude Include="src\Components\DirectedLight.h" />
+    <ClInclude Include="src\Components\Skybox.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\Common.hlsli">
       <FileType>Document</FileType>
     </None>
     <None Include="Shaders\Textured.hlsl">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="Shaders\UI.hlsl">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="Shaders\Skybox.hlsl">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>

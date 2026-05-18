@@ -51,6 +51,12 @@ void States::CreateDepthStencilStates(ID3D11Device* device)
     // Disabled: полностью выключен (для UI / fullscreen quad)
     dd.DepthEnable      = FALSE;
     device->CreateDepthStencilState(&dd, &DepthStencil.Disabled);
+
+    // Skybox: включён тест, без записи, LESS_EQUAL (скайбокс при z=1 проходит при пустом z-buffer)
+    dd.DepthEnable    = TRUE;
+    dd.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+    dd.DepthFunc      = D3D11_COMPARISON_LESS_EQUAL;
+    device->CreateDepthStencilState(&dd, &DepthStencil.SkyboxState);
 }
 
 void States::CreateBlendStates(ID3D11Device* device)

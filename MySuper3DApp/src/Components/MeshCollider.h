@@ -26,6 +26,9 @@ public:
 
     void FixedUpdate(float dt) override;
 
+    // Коэффициент трения [0..1]; применяется при создании коллайдера
+    float friction = 0.9f;
+
 private:
     void EnsureCreated();
 
@@ -36,5 +39,6 @@ private:
 
     rp3d::TriangleMesh*     triangleMesh_  = nullptr;
     rp3d::ConcaveMeshShape* shape_          = nullptr;
+    rp3d::Collider*         collider_       = nullptr;
     bool                    created_        = false;
 };

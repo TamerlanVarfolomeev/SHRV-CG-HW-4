@@ -15,6 +15,9 @@ public:
     // Пересоздаёт коллайдер с новым радиусом (для роста сферы игрока)
     void SetRadius(float newRadius);
 
+    // Коэффициент трения [0..1]; применяется при создании коллайдера
+    float friction = 0.9f;
+
 private:
     void EnsureCreated();
 

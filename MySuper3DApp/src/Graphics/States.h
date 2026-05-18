@@ -17,9 +17,10 @@ public:
     } Rasterizer;
 
     struct DepthStencil {
-        Microsoft::WRL::ComPtr<ID3D11DepthStencilState> Default;    // запись + тест
-        Microsoft::WRL::ComPtr<ID3D11DepthStencilState> ReadOnly;   // только тест (для прозрачных)
-        Microsoft::WRL::ComPtr<ID3D11DepthStencilState> Disabled;   // выкл (для UI)
+        Microsoft::WRL::ComPtr<ID3D11DepthStencilState> Default;     // запись + тест
+        Microsoft::WRL::ComPtr<ID3D11DepthStencilState> ReadOnly;    // только тест (для прозрачных)
+        Microsoft::WRL::ComPtr<ID3D11DepthStencilState> Disabled;    // выкл (для UI)
+        Microsoft::WRL::ComPtr<ID3D11DepthStencilState> SkyboxState; // LESS_EQUAL, write off (для скайбокса при z=1)
     } DepthStencil;
 
     struct Blend {

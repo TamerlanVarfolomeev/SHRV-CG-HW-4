@@ -26,6 +26,7 @@ void SphereCollider::EnsureCreated()
 
     shape_    = common_->createSphereShape(radius_);
     collider_ = rb->GetBody()->addCollider(shape_, rp3d::Transform::identity());
+    collider_->getMaterial().setFrictionCoefficient(friction);
 }
 
 void SphereCollider::SetRadius(float newRadius)
@@ -42,4 +43,5 @@ void SphereCollider::SetRadius(float newRadius)
 
     shape_    = common_->createSphereShape(newRadius);
     collider_ = body->addCollider(shape_, rp3d::Transform::identity());
+    collider_->getMaterial().setFrictionCoefficient(friction);
 }
