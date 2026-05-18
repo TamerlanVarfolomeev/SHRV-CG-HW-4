@@ -46,3 +46,22 @@ void MeshRenderer::Render(const RenderContext& ctx)
     if (texture_)
         texture_->Unbind(context, 0);
 }
+
+void MeshRenderer::RenderShadow(const RenderContext& ctx)
+{
+    if (!mesh_) return;
+    auto* context = ctx.gfx->GetContext();
+
+    // CBPerObject (world матрица) — единственное, что нужно shadow-шейдеру помимо g_LightViewProj
+    XMMATRIX world = gameObject->transform.GetWorldMatrix();
+    CBPerObject obj;
+    XMStoreFloat4x4(&obj.world, world);
+    XMMATRIX wit = XMMatrixTranspose(XMMatrixInverse(nullptr, world));
+    XMStoreFloat4x4(&obj.worldInvTranspose, wit);
+
+    cbObject_.Update(context, obj);
+    cbObject_.Bind(context, ShaderStage::VS, 2);
+
+    // Shader и состояния уже выставлены Application::RenderShadowPass
+    mesh_->Draw(context);
+}

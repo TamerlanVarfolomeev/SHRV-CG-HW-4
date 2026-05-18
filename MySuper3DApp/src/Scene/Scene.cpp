@@ -37,3 +37,9 @@ void Scene::Render(const RenderContext& ctx)
     for (auto& obj : objects_)
         obj->Render(ctx);
 }
+
+void Scene::RenderShadow(const RenderContext& ctx)
+{
+    for (auto& obj : objects_)
+        obj->RenderShadow(ctx);
+}

@@ -17,6 +17,10 @@ public:
 
     virtual void Render(const RenderContext& ctx) {}
 
+    // Вызывается во время shadow pass — только геометрия, никаких текстур/материалов.
+    // По умолчанию пусто; MeshRenderer переопределяет.
+    virtual void RenderShadow(const RenderContext& ctx) {}
+
     // Устанавливается автоматически при AddComponent
     GameObject* gameObject = nullptr;
 };

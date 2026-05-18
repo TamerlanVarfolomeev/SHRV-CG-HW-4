@@ -18,6 +18,7 @@ public:
     void Update(float dt);
     void FixedUpdate(float fixedDt);
     void Render(const RenderContext& ctx);
+    void RenderShadow(const RenderContext& ctx);
 
     // Камера сцены (создаётся вместе со сценой)
     std::unique_ptr<Camera> camera;

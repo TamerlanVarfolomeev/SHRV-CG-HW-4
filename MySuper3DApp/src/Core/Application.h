@@ -4,12 +4,15 @@
 #include "../Graphics/ConstantBuffer.h"
 #include "../Graphics/ConstantBuffers.h"
 #include "../Graphics/States.h"
+#include "../Graphics/ShadowMap.h"
+#include "../Graphics/Shader.h"
 #include "../Scene/Scene.h"
 #include "../Scene/RenderContext.h"
 #include "Window.h"
 #include "TimeAccumulator.h"
 #include "../Physics/PhysicsSystem.h"
 #include <string>
+#include <DirectXMath.h>
 
 class Application
 {
@@ -23,6 +26,12 @@ public:
 
     // Шаг фиксированного обновления (секунды). По умолчанию 200 раз в секунду.
     float fixedDt = 0.005f;
+
+    // --- Параметры shadow mapping (можно менять из наследника) ---
+    DirectX::XMFLOAT3 shadowLightDir  = { -0.5f, -1.0f, -0.3f };
+    DirectX::XMFLOAT3 shadowTarget    = {  0.0f,  0.0f,  0.0f }; // центр зоны теней (обычно следует за игроком)
+    float             shadowOrthoSize = 60.0f;   // XY-размер ортографической области
+    float             shadowDepth     = 200.0f;  // глубина (диапазон Z в свет-камере)
 
 protected:
     // Переопределяй в наследниках для своей логики
@@ -47,6 +56,7 @@ private:
     void BeginFrame(float dt, float totalTime);
     void EndFrame();
     void OnWindowResize(int w, int h);
+    void RenderShadowPass();
 
     std::unique_ptr<Window>          window_;
     std::unique_ptr<GraphicsDevice>  gfx_;
@@ -54,10 +64,13 @@ private:
     std::unique_ptr<States>          states_;
     std::unique_ptr<Scene>           scene_;
     std::unique_ptr<PhysicsSystem>   physics_;
+    std::unique_ptr<ShadowMap>       shadowMap_;
+    std::unique_ptr<Shader>          shadowShader_;
 
     ConstantBuffer<CBPerFrame>       cbFrame_;
     ConstantBuffer<CBPerCamera>      cbCamera_;
     ConstantBuffer<CBDirectedLight>  cbDefaultLight_; // привязывается в BeginFrame как fallback
+    ConstantBuffer<CBShadow>         cbShadow_;
 
     TimeAccumulator timer_;
     float totalTime_ = 0.0f;

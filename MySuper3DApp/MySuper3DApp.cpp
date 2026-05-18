@@ -216,6 +216,14 @@ protected:
 
     void OnUpdate(float dt) override
     {
+        // Перемещаем центр shadow-камеры вслед за игроком — тени всегда вокруг сферы
+        if (playerGo_)
+            shadowTarget = playerGo_->transform.position;
+
+        // Синхронизируем направление shadow-света с DirectedLight-компонентом
+        if (sun_)
+            shadowLightDir = sun_->direction;
+
         // Накапливаем заряд пока пробел зажат (только если есть что стрелять)
         if (Input::GetKey(Key::Space) && !shootQueue_.empty())
             spaceChargeTime_ += dt;

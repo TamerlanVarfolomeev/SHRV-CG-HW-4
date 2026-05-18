@@ -20,6 +20,17 @@ Application::Application(int width, int height, const std::wstring& title)
     cbFrame_        = ConstantBuffer<CBPerFrame>(gfx_->GetDevice());
     cbCamera_       = ConstantBuffer<CBPerCamera>(gfx_->GetDevice());
     cbDefaultLight_ = ConstantBuffer<CBDirectedLight>(gfx_->GetDevice());
+    cbShadow_       = ConstantBuffer<CBShadow>(gfx_->GetDevice());
+
+    // --- Shadow mapping инфраструктура ---
+    shadowMap_ = std::make_unique<ShadowMap>(gfx_->GetDevice(), 2048);
+    shadowShader_ = std::make_unique<Shader>(gfx_->GetDevice(),
+        L"Shaders/ShadowDepth.hlsl",
+        std::vector<InputElement>{
+            { "POSITION", DXGI_FORMAT_R32G32B32_FLOAT },
+            { "NORMAL",   DXGI_FORMAT_R32G32B32_FLOAT },
+            { "TEXCOORD", DXGI_FORMAT_R32G32_FLOAT    },
+        });
 
     window_->OnResize = [this](int w, int h) { OnWindowResize(w, h); };
 }
@@ -60,7 +71,10 @@ void Application::Run()
         if (Input::GetKeyDown(Key::F))
             wireframe_ = !wireframe_;
 
-        // --- Рендер ---
+        // --- Shadow pass (рендерим сцену из источника света в shadow map) ---
+        RenderShadowPass();
+
+        // --- Main pass ---
         BeginFrame(dt, totalTime_);
 
         RenderContext ctx{ gfx_.get(), scene_->camera.get() };
@@ -123,6 +137,59 @@ void Application::BeginFrame(float dt, float totalTime)
     CBDirectedLight lightData;  // заполнен дефолтами из ConstantBuffers.h
     cbDefaultLight_.Update(context, lightData);
     cbDefaultLight_.Bind(context, ShaderStage::PS, 4);
+
+    // CBShadow (b5) — lightViewProj был обновлён в RenderShadowPass, переподтверждаем привязку
+    cbShadow_.Bind(context, ShaderStage::Both, 5);
+
+    // --- Shadow map → t1 + comparison sampler → s1 ---
+    auto* shadowSrv = shadowMap_->GetSRV();
+    context->PSSetShaderResources(1, 1, &shadowSrv);
+    auto* shadowSamp = states_->Sampler.ShadowCompare.Get();
+    context->PSSetSamplers(1, 1, &shadowSamp);
+}
+
+void Application::RenderShadowPass()
+{
+    auto* dctx = gfx_->GetContext();
+
+    // --- Считаем lightViewProj от направления света + центра/размера зоны теней ---
+    XMVECTOR dir = XMVector3Normalize(XMLoadFloat3(&shadowLightDir));
+    XMVECTOR tgt = XMLoadFloat3(&shadowTarget);
+    XMVECTOR eye = XMVectorSubtract(tgt, XMVectorScale(dir, shadowDepth * 0.5f));
+
+    XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+    // Если свет почти вертикальный — берём другой up, чтобы LookAt не вырождался
+    if (std::fabs(XMVectorGetY(dir)) > 0.99f)
+        up = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
+
+    XMMATRIX view = XMMatrixLookAtLH(eye, tgt, up);
+    XMMATRIX proj = XMMatrixOrthographicLH(shadowOrthoSize, shadowOrthoSize, 0.0f, shadowDepth);
+
+    CBShadow shadowData;
+    XMStoreFloat4x4(&shadowData.lightViewProj, view * proj);
+    cbShadow_.Update(dctx, shadowData);
+    cbShadow_.Bind(dctx, ShaderStage::Both, 5);
+
+    // CBPerFrame / CBPerCamera всё ещё актуальны с прошлого кадра (или пересчитаем здесь?)
+    // Shadow-шейдер их не использует, поэтому не критично.
+
+    // --- Отвязываем shadow map от PS (была привязана в прошлом кадре как SRV t1) ---
+    ID3D11ShaderResourceView* nullSrv[1] = { nullptr };
+    dctx->PSSetShaderResources(1, 1, nullSrv);
+
+    // --- Подготовка target: DSV без RT, очистка, viewport ---
+    shadowMap_->BeginPass(dctx);
+
+    // --- Состояния: твёрдая заливка, обычный depth test ---
+    dctx->RSSetState(states_->Rasterizer.Solid.Get());
+    dctx->OMSetDepthStencilState(states_->DepthStencil.Default.Get(), 0);
+
+    // --- Биндим shadow shader ---
+    shadowShader_->Bind(dctx);
+
+    // --- Рендер всей сцены в depth ---
+    RenderContext ctx{ gfx_.get(), scene_->camera.get() };
+    scene_->RenderShadow(ctx);
 }
 
 void Application::EndFrame()

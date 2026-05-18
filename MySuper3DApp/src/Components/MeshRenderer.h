@@ -16,6 +16,7 @@ public:
                  Texture* texture = nullptr);
 
     void Render(const RenderContext& ctx) override;
+    void RenderShadow(const RenderContext& ctx) override;
 
     // Публичные параметры материала (напрямую меняй из кода)
     CBMaterial material;

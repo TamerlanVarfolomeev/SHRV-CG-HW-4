@@ -45,6 +45,14 @@ struct CBMaterial                           // register(b3)
 };
 static_assert(sizeof(CBMaterial) % 16 == 0);
 
+// Shadow mapping                              register(b5)
+struct CBShadow
+{
+    DirectX::XMFLOAT4X4 lightViewProj;  // ортографическая viewProj из источника света
+    // итого 64 байта
+};
+static_assert(sizeof(CBShadow) % 16 == 0);
+
 // Направленный источник света                register(b4)
 struct CBDirectedLight
 {

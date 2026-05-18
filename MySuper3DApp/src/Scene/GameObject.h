@@ -59,6 +59,11 @@ public:
         for (auto& c : components_) c->Render(ctx);
     }
 
+    void RenderShadow(const RenderContext& ctx)
+    {
+        for (auto& c : components_) c->RenderShadow(ctx);
+    }
+
 private:
     std::vector<std::unique_ptr<Component>> components_;
 };

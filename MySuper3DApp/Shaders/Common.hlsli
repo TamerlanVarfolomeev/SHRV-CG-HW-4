@@ -50,6 +50,12 @@ cbuffer CBDirectedLight : register(b4)
     float  _lightPad1;
 };
 
+// b5 — shadow mapping (orthographic ViewProj от источника света)
+cbuffer CBShadow : register(b5)
+{
+    matrix g_LightViewProj;
+};
+
 // Стандартная вершина — совпадает со struct Vertex в Mesh.h
 struct VertexInput
 {

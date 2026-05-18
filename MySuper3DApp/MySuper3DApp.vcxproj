@@ -147,6 +147,7 @@
     <ClCompile Include="src\Graphics\Mesh.cpp" />
     <ClCompile Include="src\Graphics\Texture.cpp" />
     <ClCompile Include="src\Graphics\CubeTexture.cpp" />
+    <ClCompile Include="src\Graphics\ShadowMap.cpp" />
     <ClCompile Include="src\Graphics\ObjLoader.cpp" />
     <ClCompile Include="src\Scene\Transform.cpp" />
     <ClCompile Include="src\Scene\Camera.cpp" />
@@ -175,6 +176,7 @@
     <ClInclude Include="src\Graphics\Mesh.h" />
     <ClInclude Include="src\Graphics\Texture.h" />
     <ClInclude Include="src\Graphics\CubeTexture.h" />
+    <ClInclude Include="src\Graphics\ShadowMap.h" />
     <ClInclude Include="src\Graphics\ObjLoader.h" />
     <ClInclude Include="src\Scene\Transform.h" />
     <ClInclude Include="src\Scene\Camera.h" />
@@ -203,6 +205,9 @@
       <FileType>Document</FileType>
     </None>
     <None Include="Shaders\Skybox.hlsl">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="Shaders\ShadowDepth.hlsl">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>

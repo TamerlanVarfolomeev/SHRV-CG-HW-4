@@ -103,4 +103,15 @@ void States::CreateSamplerStates(ID3D11Device* device)
     sd.Filter   = D3D11_FILTER_MIN_MAG_MIP_POINT;
     sd.AddressU = sd.AddressV = sd.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
     device->CreateSamplerState(&sd, &Sampler.PointWrap);
+
+    // ShadowCompare: comparison sampler с LESS, border=1 (за пределами карты — освещено)
+    D3D11_SAMPLER_DESC ss = {};
+    ss.Filter         = D3D11_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT; // даёт 2×2 PCF
+    ss.AddressU       = D3D11_TEXTURE_ADDRESS_BORDER;
+    ss.AddressV       = D3D11_TEXTURE_ADDRESS_BORDER;
+    ss.AddressW       = D3D11_TEXTURE_ADDRESS_BORDER;
+    ss.BorderColor[0] = ss.BorderColor[1] = ss.BorderColor[2] = ss.BorderColor[3] = 1.0f;
+    ss.ComparisonFunc = D3D11_COMPARISON_LESS;
+    ss.MaxLOD         = D3D11_FLOAT32_MAX;
+    device->CreateSamplerState(&ss, &Sampler.ShadowCompare);
 }

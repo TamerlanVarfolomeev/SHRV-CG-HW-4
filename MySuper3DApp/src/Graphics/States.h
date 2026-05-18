@@ -33,6 +33,7 @@ public:
         Microsoft::WRL::ComPtr<ID3D11SamplerState> LinearWrap;
         Microsoft::WRL::ComPtr<ID3D11SamplerState> LinearClamp;
         Microsoft::WRL::ComPtr<ID3D11SamplerState> PointWrap;
+        Microsoft::WRL::ComPtr<ID3D11SamplerState> ShadowCompare; // SampleCmp с LESS + border=1
     } Sampler;
 
 private:
